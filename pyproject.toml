@@ -1,0 +1,44 @@
+[build-system]
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "blackbench"
+author = "Richard Si"
+author-email = "63936253+ichard26@users.noreply.github.com"
+home-page = "https://github.com/ichard26/blackbench"
+classifiers = ["License :: OSI Approved :: MIT License"]
+description-file = "README.md"
+requires = [
+    "click>=7.1.2",
+    "pyperf>=2.0.0",
+]
+requires-python = ">=3.8"
+
+[tool.flit.metadata.requires-extra]
+test = [
+    "pytest>=6.2.4",
+    "pytest-cov>=2.12.1",
+    "coverage>=5.2.1",
+]
+dev = [
+    "black==21.6b0",
+    "mypy>=0.900",
+    "flake8>=3.9.2",
+    "isort>=5.8.0",
+    "pre-commit>=2.9.2",
+]
+
+[tool.black]
+target-version = ["py38", "py39"]
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+py_version = "38"
+
+[tool.coverage.run]
+omit = ['*/site-packages/*']
+
+[tool.pytest.ini_options]
+python_files = "*_tests.py"

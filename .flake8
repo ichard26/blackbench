@@ -1,0 +1,8 @@
+[flake8]
+select = E704, C, E, F, W
+max-line-length = 88
+extend-ignore = E203, E226, W503
+extend-exclude =
+    build,
+    dist,
+    blackbench/benchmarks/data
