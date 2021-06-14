@@ -5,4 +5,5 @@ extend-ignore = E203, E226, W503
 extend-exclude =
     build,
     dist,
-    blackbench/benchmarks/data
+    *-template.py,
+    *-targets
