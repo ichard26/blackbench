@@ -6,4 +6,5 @@ extend-exclude =
     build,
     dist,
     *-template.py,
-    *-targets
+    *-targets,
+    tests/data,

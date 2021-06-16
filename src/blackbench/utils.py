@@ -44,4 +44,4 @@ def _gen_python_files(path: Path) -> List[Path]:
         elif entry.is_dir():
             files.extend(_gen_python_files(entry_path))
 
-    return files
+    return sorted(files)

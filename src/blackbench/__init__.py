@@ -297,5 +297,5 @@ def cmd_info(ctx: click.Context) -> None:
     ctx.exit(0)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

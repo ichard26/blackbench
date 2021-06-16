@@ -1,0 +1,9 @@
+[report]
+omit =
+  tests/data/*
+  */site-packages/*
+  .tox/*
+precision = 1
+
+[html]
+show_contexts = True

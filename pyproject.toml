@@ -40,13 +40,14 @@ extend-exclude = '''
 /(
   src/blackbench/.*-targets
   | src/blackbench/.*-template.py
+  | tests/data
 )
 '''
 
 [tool.isort]
 profile = "black"
 skip_gitignore = true
-extend_skip_glob = ["*-template.py", "*-targets"]
+extend_skip_glob = ["*-template.py", "*-targets", "tests/data/*"]
 py_version = "38"
 known_third_party = ["click", "pyperf", "colorama"]
 known_first_party = ["blackbench"]
