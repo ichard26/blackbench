@@ -44,4 +44,15 @@ jobs:
         run: python -m flit install --extra test --deps production --symlink
 
       - name: Run test suite
-        run: pytest --cov -v --color yes
+        run: |
+          pytest --cov -v --color yes
+          coverage xml
+
+      - name: Upload coverage to Codecov
+        if: (github.event_name == 'push' && github.repository == 'ichard26/blackbench') ||  (github.event.pull_request.base.repo.full_name == 'ichard26/blackbench')
+        uses: codecov/codecov-action@v1
+        env:
+          OS: ${{ matrix.os }}
+          PYTHON: ${{ matrix.python }}
+        with:
+          env_vars: OS,PYTHON
