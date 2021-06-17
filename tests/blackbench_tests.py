@@ -1,16 +1,17 @@
 # mypy: disallow_untyped_defs=False
+# mypy: disallow_incomplete_defs=False
 
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from unittest.mock import patch
 
 import click
 import pytest
+from click.testing import CliRunner
 
 import blackbench
 
 from .utils import (
-    DATA_DIR,
     DIR_SEP,
     TASKS_DIR,
     TEST_MICRO_PATH,
@@ -39,15 +40,9 @@ class FakeParameter(click.Parameter):
         pass
 
 
-def test_gen_python_files():
-    target_dir = DATA_DIR / "normal-targets"
-    discovered_files = blackbench.utils._gen_python_files(target_dir)
-    assert discovered_files == TEST_NORMAL_TARGETS
-
-
 def test_task_callback():
     good_path = TEST_TASK_TEMPLATES["paint"]
-    good = blackbench.Task("paint", good_path.read_text(encoding="utf8"), good_path)
+    good = blackbench.Task.from_file("paint", good_path)
     ctx = FakeContext(params={"format_config": ""})
     with replace_data_files():
         task = blackbench.task_callback(ctx, FakeParameter(), "paint")
@@ -56,7 +51,7 @@ def test_task_callback():
 
 def test_task_callback_with_custom_config(capsys):
     good_path = TEST_TASK_TEMPLATES["paint"]
-    good = blackbench.Task("paint", good_path.read_text(encoding="utf8"), good_path)
+    good = blackbench.Task.from_file("paint", good_path)
     ctx = FakeContext(params={"format_config": "I will cause a warning :p"})
     with replace_data_files():
         task = blackbench.task_callback(ctx, FakeParameter(), "paint")
@@ -71,9 +66,7 @@ def test_task_callback_with_custom_config(capsys):
 
 def test_task_callback_with_format_task():
     good_path = TEST_TASK_TEMPLATES["format"]
-    good = blackbench.FormatTask(
-        "format", good_path.read_text(encoding="utf8"), good_path
-    )
+    good = blackbench.FormatTask.from_file("format", good_path)
     ctx = FakeContext(params={"format_config": ""})
     with replace_data_files():
         task = blackbench.task_callback(ctx, FakeParameter(), "format")
@@ -82,9 +75,7 @@ def test_task_callback_with_format_task():
 
 def test_task_callback_with_format_task_and_custom_config():
     good_path = TEST_TASK_TEMPLATES["format"]
-    good = blackbench.FormatTask(
-        "format", good_path.read_text(encoding="utf8"), good_path, "is_pyi=True"
-    )
+    good = blackbench.FormatTask.from_file("format", good_path, "is_pyi=True")
     ctx = FakeContext(params={"format_config": "is_pyi=True"})
     with replace_data_files():
         task = blackbench.task_callback(ctx, FakeParameter(), "format")
@@ -103,18 +94,16 @@ def test_task_create_benchmark(task_name: str) -> None:
     with replace_data_files():
         bm = task.create_benchmark(target)
 
-    assert bm.name == f"[{task_name}]-[tiny.py]"
+    good_name = f"[{task_name}]-[tiny.py]"
+    assert bm.name == good_name
     assert bm.micro
     good_template = (TASKS_DIR / f"{task_name}-template.py").read_text(encoding="utf8")
     if task_name == "paint":
-        good_code = good_template.format(
-            target=target.path.resolve(),
-            name="[paint]-[tiny.py]",
-        )
+        good_code = good_template.format(target=target.path, name=good_name)
     else:
         good_code = good_template.format(
-            target=target.path.resolve(),
-            name="[format]-[tiny.py]",
+            target=target.path,
+            name=good_name,
             mode="is_pyi=True",
         )
     assert bm.code == good_code
@@ -122,26 +111,8 @@ def test_task_create_benchmark(task_name: str) -> None:
     assert bm.task_based == task
 
 
-def test_msg(capsys):
-    blackbench.utils.log("i'm a log msg")
-    captured = capsys.readouterr()
-    assert captured.out == "[*] i'm a log msg\n"
-
-
-def test_warn(capsys):
-    blackbench.utils.warn("i'm a warning msg")
-    captured = capsys.readouterr()
-    assert captured.out == "[*] WARNING: i'm a warning msg\n"
-
-
-def test_err(capsys):
-    blackbench.utils.err("i'm a error msg!")
-    captured = capsys.readouterr()
-    assert captured.out == "[*] ERROR: i'm a error msg!\n"
-
-
 def test_managed_workdir(tmp_path, capsys):
-    with patch("tempfile.tempdir", str(tmp_path)):
+    with patch("tempfile.tempdir", str(tmp_path)), pytest.raises(RuntimeError):
         with blackbench.utils.managed_workdir():
             entries = list(tmp_path.iterdir())
             assert len(entries) == 1
@@ -151,10 +122,11 @@ def test_managed_workdir(tmp_path, capsys):
                 f"[*] Created temporary workdir at `{tmp_path!s}{DIR_SEP}blackbench"
                 in captured.out
             )
+            raise RuntimeError
 
-        assert not len(list(tmp_path.iterdir()))
-        captured = capsys.readouterr()
-        assert captured.out == "[*] Cleaning up.\n"
+    assert not len(list(tmp_path.iterdir()))
+    captured = capsys.readouterr()
+    assert captured.out == "[*] Cleaning up.\n"
 
 
 @pytest.mark.parametrize(
@@ -166,15 +138,31 @@ def test_target_name(micro: bool, tpath: Path) -> None:
         assert t.name == "ello.py"
 
 
-def test_get_provided_targets_normal():
+@pytest.mark.parametrize(
+    "micro, good_targets", [(True, TEST_MICRO_TARGETS), (False, TEST_NORMAL_TARGETS)]
+)
+def test_get_provided_targets(micro: bool, good_targets: List[Path]):
     with replace_data_files():
-        targets = blackbench.get_provided_targets(micro=False)
-        expected = [blackbench.Target(p, False) for p in TEST_NORMAL_TARGETS]
+        targets = blackbench.get_provided_targets(micro=micro)
+        expected = [blackbench.Target(p, micro) for p in good_targets]
         assert targets == expected
 
 
-def test_get_provided_targets_micro():
+def test_info_cmd():
     with replace_data_files():
-        targets = blackbench.get_provided_targets(micro=True)
-        expected = [blackbench.Target(p, True) for p in TEST_MICRO_TARGETS]
-        assert targets == expected
+        results = CliRunner().invoke(blackbench.main, "info")
+    good = """\
+Tasks:
+  paint, format
+
+Normal targets:
+  1. goodbye-internet.pyi
+  2. hello-world.py
+  3. i{0}heard{0}you{0}like{0}nested.py
+
+Micro targets:
+  1. tiny.py
+""".format(
+        DIR_SEP
+    )
+    assert results.output == good
