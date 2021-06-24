@@ -1,5 +1,7 @@
 [run]
 relative_files = True
+omit =
+  */blackbench-workdir*/*
 
 [report]
 omit =

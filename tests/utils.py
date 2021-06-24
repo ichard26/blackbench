@@ -13,7 +13,7 @@ import blackbench
 NO_BLACK = False
 try:
     import black  # noqa: F401
-except ImportError:
+except ImportError:  # pramga: no cover
     NO_BLACK = True
 
 WINDOWS = sys.platform.startswith("win")
