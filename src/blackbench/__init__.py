@@ -20,14 +20,14 @@ from .utils import _gen_python_files, err, log, managed_workdir, warn
 THIS_DIR = Path(__file__).parent
 NORMAL_TARGETS_DIR = THIS_DIR / "normal-targets"
 MICRO_TARGETS_DIR = THIS_DIR / "micro-targets"
-TASK_TEMPLATES = {
-    "parse": THIS_DIR / "parse-template.py",
+_TASK_TEMPLATES_DIR = THIS_DIR / "task-templates"
+AVAILABLE_TASKS = {
+    "parse": _TASK_TEMPLATES_DIR / "parse-template.py",
     # TODO: add support for these tasks:
-    # "format-fast-no-parse": THIS_DIR / "format-fast-no-parse-template.py",
-    # "format-no-parse": THIS_DIR / "format-no-parse-template.py",
-    "format-fast": THIS_DIR / "format-fast-template.py",
-    "format": THIS_DIR / "format-template.py",
-    "paint": Path.cwd() / "tests" / "data" / "tasks" / "paint-template.py",
+    # "format-fast-no-parse": _TASK_TEMPLATES_DIR / "format-fast-no-parse-template.py",
+    # "format-no-parse": _TASK_TEMPLATES_DIR / "format-no-parse-template.py",
+    "format-fast": _TASK_TEMPLATES_DIR / "format-fast-template.py",
+    "format": _TASK_TEMPLATES_DIR / "format-template.py",
 }
 
 
@@ -90,20 +90,25 @@ class FormatTask(Task):
 
 
 def task_callback(ctx: click.Context, param: click.Parameter, value: str) -> Task:
+    normalized = value.casefold()
+    if normalized not in AVAILABLE_TASKS:
+        options = ", ".join([f"'{t}'" for t in AVAILABLE_TASKS])
+        raise click.BadParameter(f"'{normalized}' is not one of {options}.")
+
     format_config = ctx.params["format_config"]
-    if value.startswith("format"):
+    if normalized.startswith("format"):
         format_config = format_config or ""
         return FormatTask.from_file(
-            value, TASK_TEMPLATES[value], custom_mode=format_config
+            normalized, AVAILABLE_TASKS[normalized], custom_mode=format_config
         )
 
     if ctx.params["format_config"]:
         warn(
             "Ignoring `--format-config` option since it doesn't make sense"
-            f" for the `{value}` task."
+            f" for the `{normalized}` task."
         )
 
-    return Task.from_file(value, TASK_TEMPLATES[value])
+    return Task.from_file(normalized, AVAILABLE_TASKS[normalized])
 
 
 def run_suite(
@@ -195,7 +200,6 @@ def main(ctx: click.Context) -> None:
 @click.option(
     "--task",
     default="format",
-    type=click.Choice(list(TASK_TEMPLATES.keys()), case_sensitive=False),
     callback=task_callback,
     show_default=True,
     help=(
@@ -286,7 +290,7 @@ def cmd_info(ctx: click.Context) -> None:
     """Show available targets and tasks."""
 
     click.secho("Tasks:", bold=True)
-    click.echo("  " + ", ".join(TASK_TEMPLATES.keys()) + "\n")
+    click.echo("  " + ", ".join(AVAILABLE_TASKS.keys()) + "\n")
 
     click.secho("Normal targets:", bold=True)
     normal_iter = enumerate(get_provided_targets(False), start=1)

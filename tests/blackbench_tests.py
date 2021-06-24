@@ -344,7 +344,7 @@ def test_run_cmd_with_preexisting_file_but_continue(tmp_result: Path, run_cmd):
     assert tmp_result.read_text("utf8") != "aaaa"
 
 
-@pytest.mark.parametrize("task", blackbench.TASK_TEMPLATES.keys())
+@pytest.mark.parametrize("task", blackbench.AVAILABLE_TASKS.keys())
 def test_provided_tasks(task: str, tmp_path: Path, tmp_result: Path, run_cmd):
     # All of this complexity is to speed up the test up by avoiding unnecessary targets.
     tiny = tmp_path / "super-tiny.py"

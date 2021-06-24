@@ -40,7 +40,7 @@ _original_run: Final = subprocess.run
 
 @contextmanager
 def replace_data_files() -> Generator[None, None, None]:
-    task_patcher = patch("blackbench.TASK_TEMPLATES", TEST_TASK_TEMPLATES)
+    task_patcher = patch("blackbench.AVAILABLE_TASKS", TEST_TASK_TEMPLATES)
     normal_targets_patcher = patch("blackbench.NORMAL_TARGETS_DIR", TEST_NORMAL_PATH)
     micro_targets_patcher = patch("blackbench.MICRO_TARGETS_DIR", TEST_MICRO_PATH)
     task_patcher.start()
