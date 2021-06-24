@@ -1,4 +1,4 @@
-exclude: /(.*-template\.py|.*-targets|tests/data)
+exclude: ^(.*-template\.py|.*-targets|tests/data/)
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1

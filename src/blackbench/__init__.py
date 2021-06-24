@@ -10,7 +10,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import click
 import pyperf
@@ -27,6 +27,7 @@ TASK_TEMPLATES = {
     # "format-no-parse": THIS_DIR / "format-no-parse-template.py",
     "format-fast": THIS_DIR / "format-fast-template.py",
     "format": THIS_DIR / "format-template.py",
+    "paint": Path.cwd() / "tests" / "data" / "tasks" / "paint-template.py",
 }
 
 
@@ -107,8 +108,9 @@ def task_callback(ctx: click.Context, param: click.Parameter, value: str) -> Tas
 
 def run_suite(
     benchmarks: List[Benchmark], fast: bool, workdir: Path
-) -> Optional[pyperf.BenchmarkSuite]:
+) -> Tuple[Optional[pyperf.BenchmarkSuite], bool]:
     results: List[pyperf.Benchmark] = []
+    errored = False
     for i, bm in enumerate(benchmarks, start=1):
         log(f"Running `{bm.name}` benchmark ({i}/{len(benchmarks)})")
         script = workdir / f"{i}.py"
@@ -123,6 +125,7 @@ def run_suite(
             subprocess.run(cmd, check=True)
         except subprocess.CalledProcessError:
             err("Failed to run benchmark ^^^")
+            errored = True
         else:
             t1 = time.perf_counter()
             log(f"Took {round(t1 - t0, 3)} seconds.")
@@ -131,9 +134,9 @@ def run_suite(
             results.append(result)
     else:
         if results:
-            return pyperf.BenchmarkSuite(results)
+            return pyperf.BenchmarkSuite(results), errored
         else:
-            return None
+            return None, True
 
 
 @dataclass(frozen=True)
@@ -154,7 +157,7 @@ class Target:
     __version__,
     # Very hacky use of package value :P
     package_name=__file__,
-    message="%(prog)s, version %(version)s from %(package)s",
+    message="%(prog)s %(version)s from %(package)s",
 )
 @click.pass_context
 def main(ctx: click.Context) -> None:
@@ -264,7 +267,7 @@ def cmd_run(
     benchmarks = [task.create_benchmark(t) for t in selected_targets]
 
     with managed_workdir() as workdir:
-        suite_results = run_suite(benchmarks, fast, workdir)
+        suite_results, errored = run_suite(benchmarks, fast, workdir)
 
     if suite_results:
         suite_results.dump(str(dump_path), replace=True)
@@ -274,7 +277,7 @@ def cmd_run(
 
     end_time = time.perf_counter()
     log(f"Blackbench run finished in {round(end_time - start_time, 3)} seconds.")
-    ctx.exit(0)
+    ctx.exit(int(errored))
 
 
 @main.command("info")

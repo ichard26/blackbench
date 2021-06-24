@@ -20,4 +20,4 @@ def paint_func(code):
         pass
 
 
-runner.bench_func("{name}", format_func, code)
+runner.bench_func("{name}", paint_func, code)
