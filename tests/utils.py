@@ -1,11 +1,20 @@
 import subprocess
 import sys
 from contextlib import contextmanager
+from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Final, Generator, List
 from unittest.mock import Mock, patch
 
+import pytest
+
 import blackbench
+
+NO_BLACK = False
+try:
+    import black  # noqa: F401
+except ImportError:
+    NO_BLACK = True
 
 WINDOWS = sys.platform.startswith("win")
 DIR_SEP = "\\" if WINDOWS else "/"
@@ -76,3 +85,12 @@ def fast_run(cmd: List[str], *args: Any, **kwargs: Any) -> subprocess.CompletedP
 
 def get_subprocess_run_commands(mock: Mock) -> List[List[str]]:
     return [call_args[0][0] for call_args in mock.call_args_list]
+
+
+def needs_black(func: Callable) -> Callable:
+    @wraps(func)
+    @pytest.mark.skipif(NO_BLACK, reason="can't import black")
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        return func(*args, **kwargs)
+
+    return wrapper  # type: ignore

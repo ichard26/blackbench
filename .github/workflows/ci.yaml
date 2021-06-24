@@ -43,6 +43,10 @@ jobs:
       - name: Install checked out revision
         run: python -m flit install --extra test --deps production --symlink
 
+        # Test against the latest PyPI black to verify compatbility (also to avoid pinning :p).
+      - name: Install Black
+        run: python -m pip install black[python2]
+
       - name: Run test suite
         run: |
           pytest --cov -v --color yes

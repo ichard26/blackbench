@@ -254,9 +254,15 @@ def cmd_run(
     """
     start_time = time.perf_counter()
 
+    try:
+        import black  # noqa: F401
+    except ImportError:
+        err("Black isn't importable in the current environment.")
+        ctx.exit(1)
+
     pretty_dump_path = str(dump_path.relative_to(os.getcwd()))
     if dump_path.exists():
-        warn(f"A file / directory already exists at `{pretty_dump_path}`")
+        warn(f"A file / directory already exists at `{pretty_dump_path}`.")
         click.confirm(
             click.style("[*] Do you want to overwrite and continue?", bold=True),
             abort=True,

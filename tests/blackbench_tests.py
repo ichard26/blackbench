@@ -27,6 +27,7 @@ from .utils import (
     bm_run_mock_helper,
     fast_run,
     get_subprocess_run_commands,
+    needs_black,
     replace_data_files,
 )
 
@@ -188,6 +189,7 @@ Micro targets:
     assert results.output == good
 
 
+@needs_black
 def test_run_cmd(tmp_result: Path, run_cmd):
     # TODO: make these run command tests less brittle
     # TODO: improve result data checks to be more flexible
@@ -231,6 +233,7 @@ def test_run_cmd(tmp_result: Path, run_cmd):
     assert output_lines[-1].startswith("[*] Blackbench run finished in")
 
 
+@needs_black
 def test_run_cmd_with_fast(tmp_result: Path, run_cmd):
     mock = bm_run_mock_helper(
         [
@@ -252,6 +255,7 @@ def test_run_cmd_with_fast(tmp_result: Path, run_cmd):
         assert "--fast" in cmd
 
 
+@needs_black
 def test_run_cmd_with_micro(tmp_result: Path, run_cmd):
     mock = bm_run_mock_helper([DATA_DIR / "micro-tiny.json"])
     with patch("subprocess.run", wraps=mock) as sub_run, replace_data_files():
@@ -264,6 +268,7 @@ def test_run_cmd_with_micro(tmp_result: Path, run_cmd):
     assert tmp_result.read_text("utf8") == good_result
 
 
+@needs_black
 def test_run_cmd_with_normal(tmp_result: Path, run_cmd):
     mock = bm_run_mock_helper(
         [
@@ -282,6 +287,7 @@ def test_run_cmd_with_normal(tmp_result: Path, run_cmd):
     assert tmp_result.read_text("utf8") == good_result
 
 
+@needs_black
 def test_run_cmd_with_format_config(tmp_result: Path, run_cmd):
     mock = bm_run_mock_helper([DATA_DIR / "micro-tiny.json"])
     with patch("subprocess.run", wraps=mock), replace_data_files():
@@ -304,6 +310,7 @@ def test_run_cmd_with_format_config(tmp_result: Path, run_cmd):
     assert tmp_result.read_text("utf8") == good_result
 
 
+@needs_black
 def test_run_cmd_with_invalid_target(tmp_result: Path, run_cmd):
     mock_return = [Target(DATA_DIR / "invalid-target.py", micro=True)]
     # fmt: off
@@ -318,17 +325,19 @@ def test_run_cmd_with_invalid_target(tmp_result: Path, run_cmd):
     assert result.output.count("ERROR") == 1 and "WARNING" not in result.output
 
 
+@needs_black
 def test_run_cmd_with_preexisting_file(tmp_result: Path, run_cmd):
     tmp_result.touch()
     result = run_cmd(["run", str(tmp_result)], input="n")
     assert result.exit_code == 1
-    good = """[*] WARNING: A file / directory already exists at `results.json`
+    good = """[*] WARNING: A file / directory already exists at `results.json`.
 [*] Do you want to overwrite and continue? [y/N]: n
 Aborted!
 """
     assert result.output == good
 
 
+@needs_black
 def test_run_cmd_with_preexisting_file_but_continue(tmp_result: Path, run_cmd):
     tmp_result.write_text("aaaa", "utf8")
 
@@ -337,7 +346,7 @@ def test_run_cmd_with_preexisting_file_but_continue(tmp_result: Path, run_cmd):
             ["run", str(tmp_result), "--targets", "micro", "--task", "paint"], input="y"
         )
     assert not result.exit_code
-    good = """[*] WARNING: A file / directory already exists at `results.json`
+    good = """[*] WARNING: A file / directory already exists at `results.json`.
 [*] Do you want to overwrite and continue? [y/N]: y
 """
     assert good in result.output
@@ -345,6 +354,7 @@ def test_run_cmd_with_preexisting_file_but_continue(tmp_result: Path, run_cmd):
 
 
 @pytest.mark.parametrize("task", blackbench.AVAILABLE_TASKS.keys())
+@needs_black
 def test_provided_tasks(task: str, tmp_path: Path, tmp_result: Path, run_cmd):
     # All of this complexity is to speed up the test up by avoiding unnecessary targets.
     tiny = tmp_path / "super-tiny.py"
