@@ -152,9 +152,9 @@ class Target:
     @property
     def name(self) -> str:
         if self.micro:
-            return str(self.path.relative_to(MICRO_TARGETS_DIR))
+            return self.path.relative_to(MICRO_TARGETS_DIR).as_posix()
         else:
-            return str(self.path.relative_to(NORMAL_TARGETS_DIR))
+            return self.path.relative_to(NORMAL_TARGETS_DIR).as_posix()
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
