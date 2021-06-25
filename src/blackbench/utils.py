@@ -27,7 +27,7 @@ def err(msg: str, **kwargs: Dict[str, Any]) -> None:
 
 @contextmanager
 def managed_workdir() -> Generator[Path, None, None]:
-    with TemporaryDirectory(prefix="blackbench-workdir") as f:
+    with TemporaryDirectory(prefix="blackbench-workdir-") as f:
         log(f"Created temporary workdir at `{f}`.")
         try:
             yield Path(f)

@@ -199,6 +199,7 @@ def main(ctx: click.Context) -> None:
 )
 @click.option(
     "--task",
+    metavar=f"[{'|'.join(AVAILABLE_TASKS)}]",
     default="format",
     callback=task_callback,
     show_default=True,

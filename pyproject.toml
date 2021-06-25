@@ -20,13 +20,12 @@ test = [
     "pytest>=6.2.4",
     "pytest-cov>=2.12.1",
     "coverage>=5.2.1",
-    "colorama>=0.4.4 ; platform_system == 'Windows'",
 ]
 dev = [
     "black[colorama]==21.6b0",
-    "mypy>=0.900",
+    "mypy>=0.910",
     "flake8>=3.9.2",
-    "isort>=5.8.0",
+    "isort>=5.9.0",
     "pre-commit>=2.9.2",
 ]
 
