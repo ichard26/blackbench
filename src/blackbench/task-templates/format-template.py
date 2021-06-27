@@ -15,4 +15,9 @@ def format_func(code):
         pass
 
 
+# Add newlines that Black will strip out to force safety checks to run.
+# Without it safety checks only run if changes are made. There’s a possibility
+# one version of Black will have to do more work over another one. This
+# would totally throw off the results for any sort of comparsions.
+code = code + "\n\n\n"
 runner.bench_func("{name}", format_func, code)
