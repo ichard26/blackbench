@@ -25,8 +25,14 @@ dev = [
     "black[colorama]==21.6b0",
     "mypy>=0.910",
     "flake8>=3.9.2",
-    "isort>=5.9.0",
     "pre-commit>=2.9.2",
+]
+doc = [
+    "sphinx>=4.0.0",
+    "sphinx-autobuild>=2021.3.14",
+    "sphinx-panels>=0.6.0",
+    "myst-parser>=0.15.1",
+    "furo>=2021.6.24b37",
 ]
 
 [tool.flit.scripts]

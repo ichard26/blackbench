@@ -32,6 +32,8 @@ repos:
     rev: 0.7.7
     hooks:
       - id: mdformat
-        args: [--number, --wrap=88]
+        args: [--wrap=88]
         additional_dependencies:
           - mdformat-gfm
+          - mdformat-myst
+          - mdformat-deflist
