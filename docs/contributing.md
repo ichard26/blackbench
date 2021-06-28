@@ -203,7 +203,7 @@ formatting (and mostly exist to measure performance in a specific area, like str
 processing).
 
 In terms of guidelines: normal targets shouldn't be bigger than ~2000 lines (this is to
-keep time requirements to run the benchmark based off the target managable), and micro
+keep time requirements to run the benchmark based off the target manageable), and micro
 targets shouldn't be bigger than ~400 lines. Oh and for micro targets, make sure their
 focus hasn't been already covered by another target.
 

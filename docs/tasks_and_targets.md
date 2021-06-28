@@ -19,7 +19,7 @@ Below are details about the tasks and targets that ship with blackbench:
 
 ## Tasks
 
-- `format`: standard Black formattting behaviour although safety checks will **always**
+- `format`: standard Black formatting behaviour although safety checks will **always**
   be run
 - `format-fast`: like `format` but using `--fast` so safety checks are disabled
 - `parse`: only do blib2to3 parsing
@@ -30,7 +30,7 @@ Below are details about the tasks and targets that ship with blackbench:
 The `format` task forces safety checks to run (by adding trailing newlines) or else it could
 skew the data in a nasty way. Normally safety checks only run if changes are made so there's
 a possibility one version of Black will have to do more work over the other one you're
-comparing against, totally throwing off the results for any sort of comparsions.
+comparing against, totally throwing off the results for any sort of comparisons.
 ```
 
 ## Targets

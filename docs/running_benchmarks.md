@@ -31,7 +31,7 @@ Use --quiet option to hide these warnings.
 
 **Note how there's a "WARNING: the benchmark result may be unstable" line in the
 output.** This leads perfectly into the next topic when running benchmarks: stability
-and reliablity.
+and reliability.
 
 ```{note}
 pyperf's instability warning text mentions increasing the amount of runs, values, and loops
@@ -45,7 +45,7 @@ pyperf's instability warning text mentions increasing the amount of runs, values
 While blackbench is supposed to be rather easy to use, one must understand the basics of
 *stable* benchmarks and their importance. Stable as in the data doesn't vary all of the
 place for absolutely no good reason (it's sorta like avoiding flakey tests). Instable
-benchmarks don't produce quality data or allow for accurate comparsions.
+benchmarks don't produce quality data or allow for accurate comparisons.
 
 For a good backgrounder on stable benchmarks I'd recommend Victor Stinner's "My journey
 to stable benchmark" series. In particular the

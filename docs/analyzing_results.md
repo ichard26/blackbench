@@ -135,7 +135,7 @@ call `blackbench dump ${ID}` with ID being the task / target name.
 
 ## Comparing multiple runs
 
-Comparsions between different runs can be done via
+Comparisons between different runs can be done via
 {ref}`pyperf compare_to <compare_to_cmd>`. You can pass as many files as you'd wish,
 although note the order to ensure the deltas make sense.
 

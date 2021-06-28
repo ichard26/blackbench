@@ -174,7 +174,7 @@ def main(ctx: click.Context) -> None:
     using the task's template as the base and the targets as the profiling data / code.
 
     Blackbench comes with pre-curated tasks and targets, allowing for easy and complete
-    benchmarking of Black and equally easy performance comparsions.
+    benchmarking of Black and equally easy performance comparisons.
 
     Under the hood, blackbench uses pyperf for the actual benchmarking, hence why the
     benchmarking results are in JSON. It's standard pyperf output and it's expected that
