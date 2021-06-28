@@ -44,8 +44,11 @@ jobs:
           python -m pip install pip wheel --upgrade
           python -m pip install nox
 
-      - name: Run tests-cov session with Nox
-        run: nox --force-color --verbose -s tests-cov-${{ matrix.python }} -- --color yes -v --ci
+      - name: Setup tests-cov session environment
+        run: nox --force-color --verbose -s tests-cov-${{ matrix.python }} --install-only
+
+      - name: Run nox-based tests-cov session
+        run: nox --force-color --verbose -s tests-cov-${{ matrix.python }} -R -- --color yes -v --ci
 
       - name: Upload coverage to Codecov
         if: >-
