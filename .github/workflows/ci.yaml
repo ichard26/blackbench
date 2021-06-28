@@ -19,13 +19,13 @@ jobs:
 
   tests:
     name: tests / ${{ matrix.python }} / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}-latest
     needs: [pre-commit]
 
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu, macos, windows]
         python: [3.8, 3.9]
 
     defaults:
@@ -42,22 +42,15 @@ jobs:
       - name: Install base requirements
         run: |
           python -m pip install pip wheel --upgrade
-          python -m pip install flit
+          python -m pip install nox
 
-      - name: Install checked out revision
-        run: python -m flit install --extra test --deps production --symlink
-
-        # Test against the latest PyPI black to verify compatbility (also to avoid pinning :p).
-      - name: Install Black
-        run: python -m pip install black[python2]
-
-      - name: Run test suite
-        run: |
-          pytest --cov -v --color yes
-          coverage xml
+      - name: Run tests-cov session with Nox
+        run: nox -s tests-cov-${{ matrix.python }}
 
       - name: Upload coverage to Codecov
-        if: (github.event_name == 'push' && github.repository == 'ichard26/blackbench') ||  (github.event.pull_request.base.repo.full_name == 'ichard26/blackbench')
+        if: >-
+          (github.event_name == 'push' && github.repository == 'ichard26/blackbench')
+              || (github.event.pull_request.base.repo.full_name == 'ichard26/blackbench')
         uses: codecov/codecov-action@v1
         env:
           OS: ${{ matrix.os }}
