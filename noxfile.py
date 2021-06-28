@@ -7,8 +7,16 @@ import nox
 
 THIS_DIR = Path(__file__).parent
 REQ_DIR = THIS_DIR / "requirements"
+WINDOWS = sys.platform.startswith("win")
 
 SUPPORTED_PYTHONS = ["3.8", "3.9"]
+_FLIT_EDITABLE_INSTALL = (
+    "flit",
+    "install",
+    "--deps",
+    "production",
+    ("--pth" if WINDOWS else "--symlink"),
+)
 
 nox.needs_version = ">=2019.5.30"
 nox.options.error_on_external_run = True
@@ -26,6 +34,9 @@ _no_wipe: List[Path] = []
 
 
 def wipe(session: nox.Session, path: Union[str, Path], once: bool = False) -> None:
+    if "--install-only" in sys.argv:
+        return
+
     if isinstance(path, str):
         path = Path.cwd() / path
     normalized = path.relative_to(THIS_DIR)
@@ -70,6 +81,11 @@ def do_docs(session: nox.Session, *, live: bool) -> None:
 
 
 def do_tests(session: nox.Session, *, coverage: bool) -> None:
+    # Allow running test suite with a specific version of Black installed.
+    # TODO: maybe consider dropping this and expect it to be done manually
+    # using the environment created by setup-env. Although that would require
+    # installing the test suite dependencies in that environment too, which
+    # I am not too keen on :/
     black_req = ""
     if "--black-req" in session.posargs:
         index = session.posargs.index("--black-req")
@@ -77,13 +93,9 @@ def do_tests(session: nox.Session, *, coverage: bool) -> None:
         del session.posargs[index]
         del session.posargs[index]
 
-    if not coverage:
-        session.install(".")
-    else:
-        # Until editable installs are figured out for PEP 517 based backends, this
-        # slighly hacky workaround will exist.
-        session.install("flit")
-        session.run("flit", "install", "--deps", "production", "--pth", silent=True)
+    session.install("flit")
+    if not ("-R" in sys.argv or "--reuse-existing-virtualenvs" in sys.argv):
+        session.run(*_FLIT_EDITABLE_INSTALL, silent=True)
     session.install(black_req or "black")
     install_requirement(session, "tests-base")
     if coverage:
@@ -132,8 +144,9 @@ def tests_cov(session: nox.Session) -> None:
     wipe(session, THIS_DIR / "coverage.xml")
 
     do_tests(session, coverage=True)
-    session.run("coverage", "html")
-    if ci:
+    if not ci:
+        session.run("coverage", "html")
+    else:
         session.run("coverage", "xml")
 
 
@@ -152,3 +165,20 @@ def build(session: nox.Session) -> None:
     session.install("flit")
     wipe(session, "dist")
     session.run("flit", "build", *session.posargs)
+
+
+@nox.session(name="setup-env", venv_backend="none")
+def setup_env(session: nox.Session) -> None:
+    """Setup a basic (virtual) environment for manual testing."""
+    env_dir = THIS_DIR / "venv"
+    bin_dir = env_dir / ("Scripts" if WINDOWS else "bin")
+    wipe(session, env_dir)
+    session.run(sys.executable, "-m", "virtualenv", str(env_dir), silent=True)
+    session.run(bin_dir / "python", "-m", "pip", "install", "flit", silent=True)
+    session.run(bin_dir / "python", "-m", *_FLIT_EDITABLE_INSTALL, silent=True)
+    activation_path = (bin_dir / "activate").relative_to(THIS_DIR)
+    activation_str = (".\\" if WINDOWS else ". ") + str(activation_path)
+    session.log(
+        "Created environment named venv at project root,"
+        f" you can activate it using `{activation_str}`."
+    )
