@@ -176,6 +176,7 @@ def setup_env(session: nox.Session) -> None:
     session.run(sys.executable, "-m", "virtualenv", str(env_dir), silent=True)
     session.run(bin_dir / "python", "-m", "pip", "install", "flit", silent=True)
     session.run(bin_dir / "python", "-m", *_FLIT_EDITABLE_INSTALL, silent=True)
+    session.run(bin_dir / "python", "-m", "pip", "install", "black", silent=True)
     activation_path = (bin_dir / "activate").relative_to(THIS_DIR)
     activation_str = (".\\" if WINDOWS else ". ") + str(activation_path)
     session.log(

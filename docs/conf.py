@@ -33,6 +33,7 @@ extensions = [
     "sphinx.ext.todo",
     "myst_parser",
     "sphinx_panels",
+    "sphinx_inline_tabs",
 ]
 
 todo_include_todos = True

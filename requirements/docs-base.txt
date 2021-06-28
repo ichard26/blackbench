@@ -2,3 +2,4 @@ sphinx>=4.0.0
 sphinx-panels>=0.6.0
 myst-parser>=0.15.1
 furo>=2021.6.24b37
+sphinx-inline-tabs>=2021.4.11b9
