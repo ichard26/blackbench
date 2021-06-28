@@ -8,15 +8,9 @@ import nox
 THIS_DIR = Path(__file__).parent
 REQ_DIR = THIS_DIR / "requirements"
 WINDOWS = sys.platform.startswith("win")
+_FLIT_EDITABLE = "--pth" if WINDOWS else "--symlink"
 
 SUPPORTED_PYTHONS = ["3.8", "3.9"]
-_FLIT_EDITABLE_INSTALL = (
-    "flit",
-    "install",
-    "--deps",
-    "production",
-    ("--pth" if WINDOWS else "--symlink"),
-)
 
 nox.needs_version = ">=2019.5.30"
 nox.options.error_on_external_run = True
@@ -94,8 +88,8 @@ def do_tests(session: nox.Session, *, coverage: bool) -> None:
         del session.posargs[index]
 
     session.install("flit")
-    if not ("-R" in sys.argv or "--reuse-existing-virtualenvs" in sys.argv):
-        session.run(*_FLIT_EDITABLE_INSTALL, silent=True)
+    # Use editable installs even without coverage because it's faster.
+    session.run("flit", "install", _FLIT_EDITABLE, silent=True)
     session.install(black_req or "black")
     install_requirement(session, "tests-base")
     if coverage:
@@ -104,7 +98,6 @@ def do_tests(session: nox.Session, *, coverage: bool) -> None:
     cmd = ["pytest"]
     if coverage:
         cmd.extend(["--cov", "--cov-branch", "--cov-context", "test", "--cov-append"])
-
     session.run(*cmd, *session.posargs)
 
 
@@ -175,7 +168,9 @@ def setup_env(session: nox.Session) -> None:
     wipe(session, env_dir)
     session.run(sys.executable, "-m", "virtualenv", str(env_dir), silent=True)
     session.run(bin_dir / "python", "-m", "pip", "install", "flit", silent=True)
-    session.run(bin_dir / "python", "-m", *_FLIT_EDITABLE_INSTALL, silent=True)
+    session.run(
+        bin_dir / "python", "-m", "flit", "install", _FLIT_EDITABLE, silent=True
+    )
     session.run(bin_dir / "python", "-m", "pip", "install", "black", silent=True)
     activation_path = (bin_dir / "activate").relative_to(THIS_DIR)
     activation_str = (".\\" if WINDOWS else ". ") + str(activation_path)

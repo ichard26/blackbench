@@ -126,10 +126,9 @@ constructive bug report or feature request, writing docs, to actually writing so
 As already mentioned, [Nox] is basically a task runner here. Most development commands
 are already configured in `noxfile.py` so running them correctly is easy as can be.
 
-All the Nox sessions should support `-r` / `--reuse-existing-virtualenvs`, so if the
-sessions are too slow, try that flag. `-R` is support for `tests*` sessions as editable
-installs are used (this is to allow for rapid iteration during development). The only
-major exception is `setup-env` but that one doesn't use a Nox-provisioned environment.
+All the Nox sessions should support both `-r` and `-R`, so if the sessions are too slow
+(especially for rapid iteration during development), try of them. The only major
+exception is `setup-env` but that one doesn't use a Nox-provisioned environment anyway.
 
 ```{seealso}
 [Nox: Command-line usage][nox-usage].
