@@ -77,7 +77,13 @@ def do_tests(session: nox.Session, *, coverage: bool) -> None:
         del session.posargs[index]
         del session.posargs[index]
 
-    session.install(".")
+    if not coverage:
+        session.install(".")
+    else:
+        # Until editable installs are figured out for PEP 517 based backends, this
+        # slighly hacky workaround will exist.
+        session.install("flit")
+        session.run("flit", "install", "--deps", "production", "--pth", silent=True)
     session.install(black_req or "black")
     install_requirement(session, "tests-base")
     if coverage:
