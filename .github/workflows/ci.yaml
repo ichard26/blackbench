@@ -45,7 +45,7 @@ jobs:
           python -m pip install nox
 
       - name: Run tests-cov session with Nox
-        run: nox -s tests-cov-${{ matrix.python }}
+        run: nox --force-color --verbose -s tests-cov-${{ matrix.python }} -- --color yes -v --ci
 
       - name: Upload coverage to Codecov
         if: >-
@@ -57,3 +57,4 @@ jobs:
           PYTHON: ${{ matrix.python }}
         with:
           env_vars: OS,PYTHON
+          files: coverage.xml
