@@ -187,6 +187,31 @@ Micro targets:
     assert results.output == good
 
 
+def test_dump_cmd_with_task(run_cmd):
+    with replace_data_files():
+        result = run_cmd(["dump", "PaINt"])
+    assert not result.exit_code
+    assert result.output == PAINT_TASK.template
+
+
+@pytest.mark.parametrize(
+    "target",
+    [Target(TEST_NORMAL_TARGETS[0], False), Target(TEST_MICRO_TARGETS[0], True)],
+    ids=["normal", "micro"],
+)
+def test_dump_cmd_with_target(target: Target, run_cmd):
+    with replace_data_files():
+        result = run_cmd(["dump", target.name.upper()])
+    assert not result.exit_code
+    assert result.output == target.path.read_text("utf8")
+
+
+def test_dump_cmd_with_nonexistant(run_cmd):
+    result = run_cmd(["dump", "good-weather"])
+    assert result.exit_code == 1
+    assert "[*] ERROR: No task or target is named 'good-weather'.\n" == result.output
+
+
 @needs_black
 def test_run_cmd(tmp_result: Path, run_cmd):
     # TODO: make these run command tests less brittle
@@ -391,3 +416,17 @@ def test_provided_targets(tmp_result: Path, run_cmd, target: Target, capsys):
     assert results and not errored
     captured = capsys.readouterr()
     assert "ERROR" not in captured.out and "WARNING" not in captured.out
+
+
+def test_no_duplicated_id():
+    targets = [
+        *blackbench.get_provided_targets(micro=False),
+        *blackbench.get_provided_targets(micro=True),
+    ]
+    names = [t.name for t in targets]
+    names.extend(blackbench.AVAILABLE_TASKS.keys())
+    if len(set(names)) != len(names):  # pragma: no cover
+        pytest.fail(
+            "At least one task / target ID isn't unique,"
+            " check the output of `blackbench info` for duplicated IDs"
+        )

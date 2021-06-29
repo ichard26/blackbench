@@ -6,6 +6,8 @@ Date of release: *unreleased*
 
 - \[bugfix\]: use posix slashes for target and benchmark names to avoid accidental
   newlines leading to crashes on Windows
+- \[enhancement\]: added `dump` command to easily query the source code for any built-in
+  task or target
 - \[enhancement\]: force safety checks to run under the `format` task to avoid
   [occasional but bad skewing of the data](labels/format-task-danger)
 - \[enhancement\]: verify that Black is actually available in the current environment

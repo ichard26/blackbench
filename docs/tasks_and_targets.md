@@ -50,10 +50,6 @@ string processing).
 - `strings-list.py`: a single list containing a few hundred of sometimes comma separated
   strings
 
-```{tip}
-You can also run `blackbench info` to get a listing of all of the built-in tasks and targets.
-```
-
 (labels/task-compatibility)=
 
 ## Compatibility
@@ -66,3 +62,67 @@ Black their benchmarks can be run under:
 
 - `format` and `format-fast`: >= 19.3b0
 - `parse`: >= 21.5b1
+
+## Useful commands
+
+Blackbench does have a few commands that interact directly with tasks and targets:
+
+`blackbench dump ${ID}`
+
+: Dumps the source code for a specific task or target.
+
+  ```console
+  dev@example:~$ blackbench dump format-fast
+  from pathlib import Path
+
+  import pyperf
+
+  import black
+
+  runner = pyperf.Runner()
+  code = Path(r"{target}").read_text(encoding="utf8")
+
+
+  def format_func(code):
+      try:
+          black.format_file_contents(code, fast=True, mode=black.FileMode({mode}))
+      except black.NothingChanged:
+          pass
+
+
+  runner.bench_func("{name}", format_func, code)
+  ```
+
+`blackbench info`
+
+: Lists all of the (IDs of the) built-in tasks and targets.
+
+  ```console
+  dev@example:~$ blackbench info
+  Tasks:
+    parse, format-fast, format
+
+  Normal targets:
+    1. black/__init__.py
+    2. black/brackets.py
+    3. black/cache.py
+    4. black/comments.py
+    5. black/concurrency.py
+    6. black/const.py
+    7. black/debug.py
+    8. black/files.py
+    9. black/linegen.py
+    10. black/lines.py
+    11. black/mode.py
+    12. black/nodes.py
+    13. black/numerics.py
+    14. black/output.py
+    15. black/parsing.py
+    16. black/report.py
+    17. black/rusty.py
+    18. black/strings.py
+    19. black/trans.py
+
+  Micro targets:
+    1. strings-list.py
+  ```

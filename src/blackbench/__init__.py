@@ -305,10 +305,30 @@ def cmd_info(ctx: click.Context) -> None:
     click.echo()
 
     click.secho("Micro targets:", bold=True)
-    normal_iter = enumerate(get_provided_targets(True), start=1)
-    click.echo("\n".join(f"  {i}. {t.name}" for i, t in normal_iter))
+    micro_iter = enumerate(get_provided_targets(True), start=1)
+    click.echo("\n".join(f"  {i}. {t.name}" for i, t in micro_iter))
 
-    ctx.exit(0)
+
+@main.command("dump")
+@click.argument("dump-target", metavar="ID")
+@click.pass_context
+def cmd_dump(ctx: click.Context, dump_target: str) -> None:
+    """Dump the source for a task or target."""
+    normalized = dump_target.casefold().strip()
+    if normalized in AVAILABLE_TASKS:
+        source = AVAILABLE_TASKS[normalized].read_text("utf8")
+        click.echo(source, nl=False)
+        ctx.exit(0)
+
+    targets = [*get_provided_targets(micro=False), *get_provided_targets(micro=True)]
+    for t in targets:
+        if normalized == t.name:
+            source = t.path.read_text("utf8")
+            click.echo(source, nl=False)
+            ctx.exit(0)
+
+    err(f"No task or target is named '{dump_target}'.")
+    ctx.exit(1)
 
 
 if __name__ == "__main__":  # pragma: no cover
