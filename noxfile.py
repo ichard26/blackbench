@@ -33,7 +33,7 @@ def wipe(session: nox.Session, path: Union[str, Path], once: bool = False) -> No
 
     if isinstance(path, str):
         path = Path.cwd() / path
-    normalized = path.relative_to(THIS_DIR)
+    normalized = path.relative_to(Path.cwd())
 
     if not path.exists():
         return
@@ -172,9 +172,4 @@ def setup_env(session: nox.Session) -> None:
         bin_dir / "python", "-m", "flit", "install", _FLIT_EDITABLE, silent=True
     )
     session.run(bin_dir / "python", "-m", "pip", "install", "black", silent=True)
-    activation_path = (bin_dir / "activate").relative_to(THIS_DIR)
-    activation_str = (".\\" if WINDOWS else ". ") + str(activation_path)
-    session.log(
-        "Created environment named venv at project root,"
-        f" you can activate it using `{activation_str}`."
-    )
+    session.log("Virtual environment at project root named `venv` ready to go!")

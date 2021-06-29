@@ -66,7 +66,7 @@ constructive bug report or feature request, writing docs, to actually writing so
    nox > /home/dev/.local/pipx/venvs/nox/bin/python -m virtualenv /home/dev/blackbench/venv
    nox > /home/dev/blackbench/venv/bin/python -m pip install flit
    nox > /home/dev/blackbench/venv/bin/python -m flit install --deps production --symlink
-   nox > Created environment named venv at project root, you can activate it using `. venv/bin/activate`.
+   nox > Virtual environment at project root named `venv` ready to go!
    nox > Session setup-env was successful.
    ```
 
@@ -129,6 +129,10 @@ are already configured in `noxfile.py` so running them correctly is easy as can 
 All the Nox sessions should support both `-r` and `-R`, so if the sessions are too slow
 (especially for rapid iteration during development), try of them. The only major
 exception is `setup-env` but that one doesn't use a Nox-provisioned environment anyway.
+
+Also, it's possible to pass extra arguments to any the sessions' main command. Want to
+add `-k "not provided"` to the pytest run in `tests`? That's possible via
+`nox -s tests -- -k "not provided"`.
 
 ```{seealso}
 [Nox: Command-line usage][nox-usage].
