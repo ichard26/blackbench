@@ -33,11 +33,6 @@ Use --quiet option to hide these warnings.
 output.** This leads perfectly into the next topic when running benchmarks: stability
 and reliability.
 
-```{note}
-pyperf's instability warning text mentions increasing the amount of runs, values, and loops
-\- **blackbench does not support this**. The only pyperf option supported by blackbench is `--fast`.
-```
-
 (labels/benchmark-stability)=
 
 ## Benchmark stability
@@ -83,10 +78,36 @@ Blackbench can be quite slow, this is because pyperf favours rigourness over spe
 data points are collected over a series of processes which while does increase the
 accuracy it also does increase total benchmark duration.
 
-You can pass `--fast` (which will get forwarded) to ask pyperf to collect less values
-for faster result turnaround at the price of result quality. Although with a well tuned
-system, the reduction in benchmarking time far usually outstrips the drop in result
-quality.
+You can pass `--fast` (which is actually an alias for `-- --fast`) to ask pyperf to
+collect less values for faster result turnaround at the price of result quality.
+Although with a well tuned system, the reduction in benchmarking time far usually
+outstrips the drop in result quality.
+
+## pyperf configuration
+
+pyperf is the library handling the benchmarking work and while its defaults are
+excellent (and blackbench just leaves everything on default) sometimes you'll need to
+modify the benchmark settings for stability or time requirement reasons. It's possible
+to pass all[^1] {py:class}`pyperf.Runner <Runner>`
+[CLI options and flags][pyperf-runner-cli].
+
+Just call `blackbench run` with your usual arguments PLUS `--` and then any pyperf
+arguments. The `--` is strongly recommended since anything that comes after will be left
+unprocessed and won't be treated as options to blackbench.
+
+Examples include:
+
+```
+$ blackbench run example.json -- --fast
+```
+
+```
+$ blackbench run example2.json --task parse -- --affinity 3
+```
+
+```
+$ blackbench run example3.json --targets micro --format-config "experimental_string_processing=True" -- --values 3 --warmups 2
+```
 
 ## Benchmark customization
 
@@ -113,3 +134,8 @@ def format_func(code):
 
 runner.bench_func("[example-task]-[example-target]", format_func, code)
 ```
+
+[^1]: Although note that not all options will play nicely with blackbench's integration with
+    pyperf. Examples include `--help`, `--output`, and `--append`.
+
+[pyperf-runner-cli]: https://pyperf.readthedocs.io/en/latest/runner.html

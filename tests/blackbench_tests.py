@@ -376,6 +376,33 @@ def test_run_cmd_with_preexisting_file_but_continue(tmp_result: Path, run_cmd):
     assert tmp_result.read_text("utf8") != "aaaa"
 
 
+@needs_black
+def test_run_cmd_with_pyperf_args(tmp_result: Path, run_cmd):
+    mock = bm_run_mock_helper([DATA_DIR / "micro-tiny.json"])
+    with patch("subprocess.run", wraps=mock) as sub_run, replace_data_files():
+        result = run_cmd(
+            [
+                "run",
+                str(tmp_result),
+                "--targets",
+                "micro",
+                "--task",
+                "format",
+                "--",
+                "--fast",
+                "--values",
+                "1",
+            ]
+        )
+
+    command = get_subprocess_run_commands(sub_run)[0]
+    assert command[4:] == ["--fast", "--values", "1"]
+    assert not result.exit_code
+    assert "ERROR" not in result.output and "WARNING" not in result.output
+    good_result = (DATA_DIR / "micro.results.json").read_text("utf8")
+    assert tmp_result.read_text("utf8") == good_result
+
+
 @pytest.mark.parametrize("task", blackbench.AVAILABLE_TASKS.keys())
 @needs_black
 def test_provided_tasks(task: str, tmp_path: Path, tmp_result: Path, run_cmd):
@@ -410,8 +437,7 @@ def test_provided_targets(tmp_result: Path, run_cmd, target: Target, capsys):
         patch("subprocess.run", fast_run), \
         blackbench.utils.managed_workdir() as workdir \
     :
-        # --fast actually overrides the speed improvements fast_run does.
-        results, errored = blackbench.run_suite([benchmark], False, workdir)
+        results, errored = blackbench.run_suite([benchmark], [], workdir)
     # fmt: on
     assert results and not errored
     captured = capsys.readouterr()

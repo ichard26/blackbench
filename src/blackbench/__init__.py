@@ -10,7 +10,7 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 import click
 import pyperf
@@ -112,7 +112,7 @@ def task_callback(ctx: click.Context, param: click.Parameter, value: str) -> Tas
 
 
 def run_suite(
-    benchmarks: List[Benchmark], fast: bool, workdir: Path
+    benchmarks: List[Benchmark], pyperf_args: Sequence[str], workdir: Path
 ) -> Tuple[Optional[pyperf.BenchmarkSuite], bool]:
     results: List[pyperf.Benchmark] = []
     errored = False
@@ -122,9 +122,7 @@ def run_suite(
         script.write_text(bm.code, encoding="utf8")
         result_file = workdir / f"{i}.json"
 
-        cmd = [sys.executable, str(script), "--output", str(result_file)]
-        if fast:
-            cmd.append("--fast")
+        cmd = [sys.executable, str(script), "--output", str(result_file), *pyperf_args]
         t0 = time.perf_counter()
         try:
             subprocess.run(cmd, check=True)
@@ -157,7 +155,7 @@ class Target:
             return self.path.relative_to(NORMAL_TARGETS_DIR).as_posix()
 
 
-@click.group(context_settings={"help_option_names": ["-h", "--help"]})
+@click.group(context_settings=dict(help_option_names=["-h", "--help"]))
 @click.version_option(
     __version__,
     # Very hacky use of package value :P
@@ -197,6 +195,9 @@ def main(ctx: click.Context) -> None:
         path_type=Path,
     ),
 )
+@click.argument(
+    "pyperf-args", metavar="[-- pyperf-args]", nargs=-1, type=click.UNPROCESSED
+)
 @click.option(
     "--task",
     metavar=f"[{'|'.join(AVAILABLE_TASKS)}]",
@@ -227,7 +228,8 @@ def main(ctx: click.Context) -> None:
     help=(
         "Collect less values during benchmarking for faster result turnaround, at the"
         " price of result quality. Although with a tuned system, the reduction in"
-        " execution time far usually outstrips the drop in result quality."
+        " execution time far usually outstrips the drop in result quality. An alias"
+        " for `-- --fast`."
     ),
     show_default=True,
 )
@@ -244,6 +246,7 @@ def main(ctx: click.Context) -> None:
 def cmd_run(
     ctx: click.Context,
     dump_path: Path,
+    pyperf_args: Tuple[str, ...],
     task: Task,
     targets: str,
     fast: bool,
@@ -277,8 +280,12 @@ def cmd_run(
         selected_targets.extend(get_provided_targets(micro=False))
     benchmarks = [task.create_benchmark(t) for t in selected_targets]
 
+    prepped_pyperf_args = list(pyperf_args)
+    if fast and "--fast" not in pyperf_args:
+        prepped_pyperf_args.append("--fast")
+
     with managed_workdir() as workdir:
-        suite_results, errored = run_suite(benchmarks, fast, workdir)
+        suite_results, errored = run_suite(benchmarks, prepped_pyperf_args, workdir)
 
     if suite_results:
         suite_results.dump(str(dump_path), replace=True)
@@ -288,7 +295,7 @@ def cmd_run(
 
     end_time = time.perf_counter()
     log(f"Blackbench run finished in {round(end_time - start_time, 3)} seconds.")
-    ctx.exit(int(errored))
+    ctx.exit(errored)
 
 
 @main.command("info")
