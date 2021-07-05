@@ -403,6 +403,12 @@ def test_run_cmd_with_pyperf_args(tmp_result: Path, run_cmd):
     assert tmp_result.read_text("utf8") == good_result
 
 
+def test_run_custom_help(run_cmd):
+    """A smoke test that verifies the custom help class won't crash :p"""
+    result = run_cmd(["run", "--help"])
+    assert not result.exit_code
+
+
 @pytest.mark.parametrize("task", blackbench.AVAILABLE_TASKS.keys())
 @needs_black
 def test_provided_tasks(task: str, tmp_path: Path, tmp_result: Path, run_cmd):

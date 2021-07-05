@@ -15,6 +15,7 @@ from typing import List, Optional, Sequence, Tuple
 import click
 import pyperf
 
+from .clickhacks import CustomHelpCommand
 from .utils import _gen_python_files, err, log, managed_workdir, warn
 
 THIS_DIR = Path(__file__).parent
@@ -155,7 +156,9 @@ class Target:
             return self.path.relative_to(NORMAL_TARGETS_DIR).as_posix()
 
 
-@click.group(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.group(
+    context_settings=dict(help_option_names=["-h", "--help"], max_content_width=90)
+)
 @click.version_option(
     __version__,
     # Very hacky use of package value :P
@@ -168,9 +171,8 @@ def main(ctx: click.Context) -> None:
     A benchmarking suite for Black, the Python code formatter.
 
     Now this isn't your typical collection of benchmarks. Blackbench is really a
-    collection of targets and tasks templates. Benchmarks are generated on the fly
-    using the task's template as the base and the targets as the profiling data / code.
-
+    collection of targets and task templates. Benchmarks are generated on the fly
+    using the task's template as the base and the targets as the profiling data.
     Blackbench comes with pre-curated tasks and targets, allowing for easy and complete
     benchmarking of Black and equally easy performance comparisons.
 
@@ -182,7 +184,9 @@ def main(ctx: click.Context) -> None:
     """
 
 
-@main.command("run", short_help="Run benchmarks and dump results.")
+@main.command(
+    "run", short_help="Run benchmarks and dump results.", cls=CustomHelpCommand
+)
 @click.argument(
     "dump_path",
     metavar="result-filepath",
