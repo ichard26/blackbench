@@ -8,108 +8,31 @@ import os
 import subprocess
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import replace
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple, Union
 
 import click
 import pyperf
 
-from .clickhacks import CustomHelpCommand
-from .utils import _gen_python_files, err, log, managed_workdir, warn
+from blackbench import resources
+from blackbench.clickhacks import CustomHelpCommand
+from blackbench.resources import FormatTask, Target, Task
+from blackbench.utils import err, log, managed_workdir, warn
 
 THIS_DIR = Path(__file__).parent
-NORMAL_TARGETS_DIR = THIS_DIR / "normal-targets"
-MICRO_TARGETS_DIR = THIS_DIR / "micro-targets"
-_TASK_TEMPLATES_DIR = THIS_DIR / "task-templates"
-AVAILABLE_TASKS = {
-    "parse": _TASK_TEMPLATES_DIR / "parse-template.py",
-    # TODO: add support for these tasks:
-    # "format-fast-no-parse": _TASK_TEMPLATES_DIR / "format-fast-no-parse-template.py",
-    # "format-no-parse": _TASK_TEMPLATES_DIR / "format-no-parse-template.py",
-    "format-fast": _TASK_TEMPLATES_DIR / "format-fast-template.py",
-    "format": _TASK_TEMPLATES_DIR / "format-template.py",
-}
 
 
-@dataclass(frozen=True)
+# ============ #
+# Benchmarking #
+# ============ #
+
+
 class Benchmark:
-    name: str
-    micro: bool
-    code: str
-
-    target_based: Optional["Target"] = None
-    task_based: Optional["Task"] = None
-
-
-def get_provided_targets(micro: bool) -> List["Target"]:
-    search_dir = MICRO_TARGETS_DIR if micro else NORMAL_TARGETS_DIR
-    targets = _gen_python_files(search_dir)
-    return [Target(t, micro) for t in targets]
-
-
-@dataclass(frozen=True)
-class Task:
-    name: str
-    template: str
-    source: Path
-
-    @classmethod
-    def from_file(cls, name: str, filepath: Path) -> "Task":
-        with open(filepath, "r", encoding="utf8") as f:
-            value = f.read()
-
-        return cls(name, value, source=filepath)
-
-    def create_benchmark(self, target: "Target") -> "Benchmark":
-        bm_name = f"[{self.name}]-[{target.name}]"
-        bm_code = self._create_benchmark_script(bm_name, target)
-
-        return Benchmark(
-            bm_name, target.micro, bm_code, target_based=target, task_based=self
-        )
-
-    def _create_benchmark_script(self, name: str, target: "Target") -> str:
-        return self.template.format(name=name, target=str(target.path))
-
-
-@dataclass(frozen=True)
-class FormatTask(Task):
-    custom_mode: str = ""
-
-    @classmethod
-    def from_file(cls, name: str, filepath: Path, custom_mode: str = "") -> "Task":
-        with open(filepath, "r", encoding="utf8") as f:
-            value = f.read()
-
-        return cls(name, value, source=filepath, custom_mode=custom_mode)
-
-    def _create_benchmark_script(self, name: str, target: "Target") -> str:
-        return self.template.format(
-            name=name, target=str(target.path), mode=self.custom_mode
-        )
-
-
-def task_callback(ctx: click.Context, param: click.Parameter, value: str) -> Task:
-    normalized = value.casefold()
-    if normalized not in AVAILABLE_TASKS:
-        options = ", ".join([f"'{t}'" for t in AVAILABLE_TASKS])
-        raise click.BadParameter(f"'{normalized}' is not one of {options}.")
-
-    format_config = ctx.params["format_config"]
-    if normalized.startswith("format"):
-        format_config = format_config or ""
-        return FormatTask.from_file(
-            normalized, AVAILABLE_TASKS[normalized], custom_mode=format_config
-        )
-
-    if ctx.params["format_config"]:
-        warn(
-            "Ignoring `--format-config` option since it doesn't make sense"
-            f" for the `{normalized}` task."
-        )
-
-    return Task.from_file(normalized, AVAILABLE_TASKS[normalized])
+    def __init__(self, task: Task, target: Target) -> None:
+        self.name = f"[{task.name}]-[{target.name}]"
+        self.code = task.create_benchmark_script(self.name, target)
+        self.micro = target.micro
 
 
 def run_suite(
@@ -143,27 +66,62 @@ def run_suite(
             return None, True
 
 
-@dataclass(frozen=True)
-class Target:
-    path: Path
-    micro: bool
-
-    @property
-    def name(self) -> str:
-        if self.micro:
-            return self.path.relative_to(MICRO_TARGETS_DIR).as_posix()
-        else:
-            return self.path.relative_to(NORMAL_TARGETS_DIR).as_posix()
+# ============================ #
+# Command / CLI implementation #
+# ============================ #
 
 
-@click.group(
-    context_settings=dict(help_option_names=["-h", "--help"], max_content_width=90)
-)
+class TaskType(click.ParamType):
+    name = "task"
+
+    def convert(
+        self,
+        value: Union[str, Task],
+        param: Optional[click.Parameter],
+        ctx: Optional[click.Context],
+    ) -> Task:
+        if isinstance(value, Task):
+            return value
+
+        try:
+            task = resources.tasks[value.casefold()]
+        except KeyError:
+            choices_str = ", ".join(resources.tasks.keys())
+            self.fail(f"{value} is not one of {choices_str}")
+
+        assert ctx is not None
+        if isinstance(task, FormatTask):
+            custom_mode = ctx.params["format_config"] or ""
+            task = replace(task, custom_mode=custom_mode)
+
+        return task
+
+    def get_metavar(self, param: click.Parameter) -> str:
+        return "[" + "|".join(resources.tasks.keys()) + "]"
+
+
+class TargetSpecifierType(click.ParamType):
+    name = "target"
+
+    def convert(
+        self, value: str, param: Optional[click.Parameter], ctx: Optional[click.Context]
+    ) -> str:
+        normalized = value.casefold()
+        if normalized in ("all", "normal", "micro"):
+            return normalized
+
+        self.fail(
+            f"'{normalized}' is not one of the target groups (micro, normal, and all)"
+            " nor the ID of a specific target (run 'blackbench info' for a list)."
+        )
+
+    def get_metavar(self, param: click.Parameter) -> str:
+        return "[$target-id|micro|normal|all]"
+
+
+@click.group(context_settings=dict(help_option_names=["-h", "--help"], max_content_width=90))
 @click.version_option(
-    __version__,
-    # Very hacky use of package value :P
-    package_name=__file__,
-    message="%(prog)s %(version)s from %(package)s",
+    __version__, package_name=__file__, message="%(prog)s %(version)s, from %(package)s"
 )
 @click.pass_context
 def main(ctx: click.Context) -> None:
@@ -184,40 +142,26 @@ def main(ctx: click.Context) -> None:
     """
 
 
-@main.command(
-    "run", short_help="Run benchmarks and dump results.", cls=CustomHelpCommand
-)
+@main.command("run", short_help="Run benchmarks and dump results.", cls=CustomHelpCommand)
 @click.argument(
     "dump_path",
     metavar="result-filepath",
     type=click.Path(
-        exists=False,
-        file_okay=True,
-        dir_okay=False,
-        resolve_path=True,
-        writable=True,
-        path_type=Path,
+        file_okay=True, dir_okay=False, resolve_path=True, writable=True, path_type=Path
     ),
 )
-@click.argument(
-    "pyperf-args", metavar="[-- pyperf-args]", nargs=-1, type=click.UNPROCESSED
-)
+@click.argument("pyperf-args", metavar="[-- pyperf-args]", nargs=-1, type=click.UNPROCESSED)
 @click.option(
     "--task",
-    metavar=f"[{'|'.join(AVAILABLE_TASKS)}]",
     default="format",
-    callback=task_callback,
-    show_default=True,
-    help=(
-        "Should blackbench measure the performance of a typical Black run (format)"
-        " or measure something more specific like blib2to3 parsing (parse)?"
-    ),
+    type=TaskType(),
+    help="The area of concern to benchmark. [default: format]",
 )
 @click.option(
     "--targets",
     default="all",
-    type=click.Choice(["normal", "micro", "all"], case_sensitive=False),
     show_default=True,
+    type=TargetSpecifierType(),
     help=(
         "Which kind(s) of code files should be used as the task's input?"
         " Normal targets are real-world code files and therefore lead to data that"
@@ -268,21 +212,26 @@ def cmd_run(
         err("Black isn't importable in the current environment.")
         ctx.exit(1)
 
+    if not isinstance(task, FormatTask) and ctx.params["format_config"]:
+        warn(
+            "Ignoring `--format-config` option since it doesn't make sense"
+            f" for the `{task.name}` task."
+        )
+
     pretty_dump_path = str(dump_path.relative_to(os.getcwd()))
     if dump_path.exists():
         warn(f"A file / directory already exists at `{pretty_dump_path}`.")
         click.confirm(
-            click.style("[*] Do you want to overwrite and continue?", bold=True),
-            abort=True,
+            click.style("[*] Do you want to overwrite and continue?", bold=True), abort=True
         )
     log(f"Will dump results to `{pretty_dump_path}`.")
 
     selected_targets: List[Target] = []
     if targets.casefold() in ("micro", "all"):
-        selected_targets.extend(get_provided_targets(micro=True))
+        selected_targets.extend(resources.micro_targets)
     if targets.casefold() in ("normal", "all"):
-        selected_targets.extend(get_provided_targets(micro=False))
-    benchmarks = [task.create_benchmark(t) for t in selected_targets]
+        selected_targets.extend(resources.normal_targets)
+    benchmarks = [Benchmark(task, target) for target in selected_targets]
 
     prepped_pyperf_args = list(pyperf_args)
     if fast and "--fast" not in pyperf_args:
@@ -308,16 +257,16 @@ def cmd_info(ctx: click.Context) -> None:
     """Show available targets and tasks."""
 
     click.secho("Tasks:", bold=True)
-    click.echo("  " + ", ".join(AVAILABLE_TASKS.keys()) + "\n")
+    click.echo("  " + ", ".join(resources.tasks.keys()) + "\n")
 
     click.secho("Normal targets:", bold=True)
-    normal_iter = enumerate(get_provided_targets(False), start=1)
-    click.echo("\n".join(f"  {i}. {t.name}" for i, t in normal_iter))
+    for i, t in enumerate(resources.normal_targets, start=1):
+        click.secho(f"  {i}. {t.name}")
     click.echo()
 
     click.secho("Micro targets:", bold=True)
-    micro_iter = enumerate(get_provided_targets(True), start=1)
-    click.echo("\n".join(f"  {i}. {t.name}" for i, t in micro_iter))
+    for i, t in enumerate(resources.micro_targets, start=1):
+        click.secho(f"  {i}. {t.name}")
 
 
 @main.command("dump")
@@ -326,17 +275,15 @@ def cmd_info(ctx: click.Context) -> None:
 def cmd_dump(ctx: click.Context, dump_target: str) -> None:
     """Dump the source for a task or target."""
     normalized = dump_target.casefold().strip()
-    if normalized in AVAILABLE_TASKS:
-        source = AVAILABLE_TASKS[normalized].read_text("utf8")
+    if task := resources.tasks.get(normalized):
+        source = task.source.read_text("utf8")
         click.echo(source, nl=False)
         ctx.exit(0)
 
-    targets = [*get_provided_targets(micro=False), *get_provided_targets(micro=True)]
-    for t in targets:
-        if normalized == t.name:
-            source = t.path.read_text("utf8")
-            click.echo(source, nl=False)
-            ctx.exit(0)
+    if target := resources.targets.get(normalized):
+        source = target.path.read_text("utf8")
+        click.echo(source, nl=False)
+        ctx.exit(0)
 
     err(f"No task or target is named '{dump_target}'.")
     ctx.exit(1)

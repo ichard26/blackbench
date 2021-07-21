@@ -19,6 +19,7 @@ requires-python = ">=3.8"
 blackbench = "blackbench:main"
 
 [tool.black]
+line-length = 100
 experimental-string-processing = true
 target-version = ["py38", "py39"]
 extend-exclude = '''

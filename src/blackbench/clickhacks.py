@@ -19,10 +19,7 @@ from click.formatting import iter_rows, measure_table, wrap_text
 
 class _SpacedHelpFormatter(click.formatting.HelpFormatter):
     def write_dl(
-        self,
-        rows: Sequence[Tuple[str, str]],
-        col_max: int = 30,
-        col_spacing: int = 2,
+        self, rows: Sequence[Tuple[str, str]], col_max: int = 30, col_spacing: int = 2
     ) -> None:
         """Writes a definition list into the buffer.  This is how options
         and commands are usually formatted.

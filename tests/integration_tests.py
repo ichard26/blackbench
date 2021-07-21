@@ -17,20 +17,20 @@ from .utils import (
     fast_run,
     get_subprocess_run_commands,
     needs_black,
-    replace_data_files,
+    replace_resources,
 )
 
 
 def test_info_cmd(run_cmd):
-    with replace_data_files():
+    with replace_resources():
         results = run_cmd("info")
     good = """\
 Tasks:
   paint, format
 
 Normal targets:
-  1. goodbye-internet.pyi
-  2. hello-world.py
+  1. hello-world.py
+  2. goodbye-internet.pyi
   3. i/heard/you/like/nested.py
 
 Micro targets:
@@ -40,7 +40,7 @@ Micro targets:
 
 
 def test_dump_cmd_with_task(run_cmd):
-    with replace_data_files():
+    with replace_resources():
         result = run_cmd(["dump", "PaINt"])
     assert not result.exit_code
     assert result.output == PAINT_TASK.template
@@ -48,11 +48,11 @@ def test_dump_cmd_with_task(run_cmd):
 
 @pytest.mark.parametrize(
     "target",
-    [Target(TEST_NORMAL_TARGETS[0], False), Target(TEST_MICRO_TARGETS[0], True)],
+    [TEST_NORMAL_TARGETS[0], TEST_MICRO_TARGETS[0]],
     ids=["normal", "micro"],
 )
 def test_dump_cmd_with_target(target: Target, run_cmd):
-    with replace_data_files():
+    with replace_resources():
         result = run_cmd(["dump", target.name.upper()])
     assert not result.exit_code
     assert result.output == target.path.read_text("utf8")
@@ -76,7 +76,7 @@ def test_run_cmd(tmp_result: Path, run_cmd):
             DATA_DIR / "normal-nested.json",
         ]
     )
-    with patch("subprocess.run", wraps=mock) as sub_run, replace_data_files():
+    with patch("subprocess.run", wraps=mock) as sub_run, replace_resources():
         result = run_cmd(["run", str(tmp_result)])
     commands = get_subprocess_run_commands(sub_run)
 
@@ -94,15 +94,9 @@ def test_run_cmd(tmp_result: Path, run_cmd):
     assert output_lines[0] == "[*] Will dump results to `results.json`."
     assert output_lines[1].startswith("[*] Created temporary workdir at `")
     assert output_lines[2] == "[*] Running `[format]-[tiny.py]` benchmark (1/4)"
-    assert (
-        output_lines[4]
-        == "[*] Running `[format]-[goodbye-internet.pyi]` benchmark (2/4)"
-    )
-    assert output_lines[6] == "[*] Running `[format]-[hello-world.py]` benchmark (3/4)"
-    assert (
-        output_lines[8]
-        == "[*] Running `[format]-[i/heard/you/like/nested.py]` benchmark (4/4)"
-    )
+    assert output_lines[4] == "[*] Running `[format]-[hello-world.py]` benchmark (2/4)"
+    assert output_lines[6] == "[*] Running `[format]-[goodbye-internet.pyi]` benchmark (3/4)"
+    assert output_lines[8] == "[*] Running `[format]-[i/heard/you/like/nested.py]` benchmark (4/4)"
     assert output_lines[-3] == "[*] Cleaning up."
     assert output_lines[-2] == "[*] Results dumped."
     assert output_lines[-1].startswith("[*] Blackbench run finished in")
@@ -118,7 +112,7 @@ def test_run_cmd_with_fast(tmp_result: Path, run_cmd):
             DATA_DIR / "normal-nested.json",
         ]
     )
-    with patch("subprocess.run", wraps=mock) as sub_run, replace_data_files():
+    with patch("subprocess.run", wraps=mock) as sub_run, replace_resources():
         result = run_cmd(["run", str(tmp_result), "--fast"])
     commands = get_subprocess_run_commands(sub_run)
 
@@ -132,8 +126,9 @@ def test_run_cmd_with_fast(tmp_result: Path, run_cmd):
 
 @needs_black
 def test_run_cmd_with_micro(tmp_result: Path, run_cmd):
+    # TODO: check that the right benchmarks were created, instead of this weird logic
     mock = bm_run_mock_helper([DATA_DIR / "micro-tiny.json"])
-    with patch("subprocess.run", wraps=mock) as sub_run, replace_data_files():
+    with patch("subprocess.run", wraps=mock) as sub_run, replace_resources():
         result = run_cmd(["run", str(tmp_result), "--targets", "micro"])
 
     assert not result.exit_code
@@ -145,6 +140,7 @@ def test_run_cmd_with_micro(tmp_result: Path, run_cmd):
 
 @needs_black
 def test_run_cmd_with_normal(tmp_result: Path, run_cmd):
+    # TODO: check that the right benchmarks were created, instead of this weird logic
     mock = bm_run_mock_helper(
         [
             DATA_DIR / "normal-goodbye-internet.json",
@@ -152,7 +148,7 @@ def test_run_cmd_with_normal(tmp_result: Path, run_cmd):
             DATA_DIR / "normal-nested.json",
         ]
     )
-    with patch("subprocess.run", wraps=mock) as sub_run, replace_data_files():
+    with patch("subprocess.run", wraps=mock) as sub_run, replace_resources():
         result = run_cmd(["run", str(tmp_result), "--targets", "normal"])
 
     assert not result.exit_code
@@ -165,19 +161,16 @@ def test_run_cmd_with_normal(tmp_result: Path, run_cmd):
 @needs_black
 def test_run_cmd_with_format_config(tmp_result: Path, run_cmd):
     mock = bm_run_mock_helper([DATA_DIR / "micro-tiny.json"])
-    with patch("subprocess.run", wraps=mock), replace_data_files():
-        result = run_cmd(
-            [
-                "run",
-                str(tmp_result),
-                "--targets",
-                "micro",
-                "--task",
-                "format",
-                "--format-config",
-                "is_pyi=True",
-            ]
-        )
+    with patch("subprocess.run", wraps=mock), replace_resources():
+        # fmt: off
+        result = run_cmd([
+            "run",
+            str(tmp_result),
+            "--targets", "micro",
+            "--task", "format",
+            "--format-config", "is_pyi=True",
+        ])
+        # fmt: on
 
     assert not result.exit_code
     assert "ERROR" not in result.output and "WARNING" not in result.output
@@ -187,11 +180,11 @@ def test_run_cmd_with_format_config(tmp_result: Path, run_cmd):
 
 @needs_black
 def test_run_cmd_with_invalid_target(tmp_result: Path, run_cmd):
-    mock_return = [Target(DATA_DIR / "invalid-target.py", micro=True)]
+    invalid_target = Target(DATA_DIR / "invalid-target.py", micro=True)
     # fmt: off
     with \
-        patch("blackbench.get_provided_targets", lambda *args, **kw: mock_return), \
-        patch("blackbench.MICRO_TARGETS_DIR", DATA_DIR) \
+        patch("blackbench.resources.MICRO_DIR", DATA_DIR), \
+        patch("blackbench.resources.micro_targets", [invalid_target]) \
     :
         result = run_cmd(["run", str(tmp_result), "--targets", "micro"])
     # fmt: on
@@ -216,7 +209,7 @@ Aborted!
 def test_run_cmd_with_preexisting_file_but_continue(tmp_result: Path, run_cmd):
     tmp_result.write_text("aaaa", "utf8")
 
-    with patch("subprocess.run", fast_run), replace_data_files():
+    with patch("subprocess.run", fast_run), replace_resources():
         result = run_cmd(
             ["run", str(tmp_result), "--targets", "micro", "--task", "paint"], input="y"
         )
@@ -230,22 +223,19 @@ def test_run_cmd_with_preexisting_file_but_continue(tmp_result: Path, run_cmd):
 
 @needs_black
 def test_run_cmd_with_pyperf_args(tmp_result: Path, run_cmd):
+    # TODO: maybe check via pyperf results instead of checking subprocess args
     mock = bm_run_mock_helper([DATA_DIR / "micro-tiny.json"])
-    with patch("subprocess.run", wraps=mock) as sub_run, replace_data_files():
-        result = run_cmd(
-            [
-                "run",
-                str(tmp_result),
-                "--targets",
-                "micro",
-                "--task",
-                "format",
+    with patch("subprocess.run", wraps=mock) as sub_run, replace_resources():
+        # fmt: off
+        result = run_cmd([
+                "run", str(tmp_result),
+                "--targets", "micro",
+                "--task", "format",
                 "--",
                 "--fast",
-                "--values",
-                "1",
-            ]
-        )
+                "--values", "1",
+        ])
+        # fmt: on
 
     command = get_subprocess_run_commands(sub_run)[0]
     assert command[4:] == ["--fast", "--values", "1"]

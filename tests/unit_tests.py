@@ -1,25 +1,26 @@
 # mypy: disallow_untyped_defs=False
 # mypy: disallow_incomplete_defs=False
 
+from dataclasses import replace
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from unittest.mock import patch
 
 import click
 import pytest
 
 import blackbench
+from blackbench import Benchmark
 
 from .utils import (
     DIR_SEP,
     PAINT_TASK,
     TASKS_DIR,
     TEST_MICRO_PATH,
-    TEST_MICRO_TARGETS,
     TEST_NORMAL_PATH,
-    TEST_NORMAL_TARGETS,
-    TEST_TASK_TEMPLATES,
-    replace_data_files,
+    TEST_TASKS,
+    replace_resources,
+    run_suite_no_op,
 )
 
 
@@ -40,55 +41,44 @@ class FakeParameter(click.Parameter):
         pass
 
 
-def test_task_callback():
-    ctx = FakeContext(params={"format_config": ""})
-    with replace_data_files():
-        task = blackbench.task_callback(ctx, FakeParameter(), "paint")
+def test_TaskType(run_cmd):
+    task_type = blackbench.TaskType()
+    with replace_resources():
+        task = task_type.convert("paint", FakeParameter(), FakeContext())
+
     assert task == PAINT_TASK
 
 
-def test_task_callback_with_custom_config(capsys):
-    ctx = FakeContext(params={"format_config": "I will cause a warning :p"})
-    with replace_data_files():
-        task = blackbench.task_callback(ctx, FakeParameter(), "paint")
-    captured = capsys.readouterr()
-    assert task == PAINT_TASK
+def test_task_callback_custom_config_warning(run_cmd, tmp_result):
+    with replace_resources(), run_suite_no_op():
+        result = run_cmd(["run", str(tmp_result), "--format-config", "no", "--task", "paint"])
     good_out = (
         "[*] WARNING: Ignoring `--format-config` option since it doesn't make sense"
         " for the `paint` task.\n"
     )
-    assert captured.out == good_out
+    assert good_out in result.output
 
 
-def test_task_callback_with_format_task():
-    good_path = TEST_TASK_TEMPLATES["format"]
-    good = blackbench.FormatTask.from_file("format", good_path)
-    ctx = FakeContext(params={"format_config": ""})
-    with replace_data_files():
-        task = blackbench.task_callback(ctx, FakeParameter(), "format")
-    assert task == good
-
-
-def test_task_callback_with_format_task_and_custom_config():
-    good_path = TEST_TASK_TEMPLATES["format"]
-    good = blackbench.FormatTask.from_file("format", good_path, "is_pyi=True")
-    ctx = FakeContext(params={"format_config": "is_pyi=True"})
-    with replace_data_files():
-        task = blackbench.task_callback(ctx, FakeParameter(), "format")
+@pytest.mark.parametrize("format_config", ["", "is_pyi=True"])
+def test_task_callback_with_format_task(format_config: str):
+    good = TEST_TASKS["format"]
+    good = replace(good, custom_mode=format_config)
+    ctx = FakeContext(params={"format_config": format_config})
+    with replace_resources():
+        task = blackbench.TaskType().convert("format", FakeParameter(), ctx)
     assert task == good
 
 
 @pytest.mark.parametrize("task_name", ["paint", "format"])
 def test_task_create_benchmark(task_name: str) -> None:
-    good_path = TEST_TASK_TEMPLATES[task_name]
     if task_name == "paint":
         task = PAINT_TASK
     else:
-        task = blackbench.FormatTask.from_file("format", good_path, "is_pyi=True")
-    target = blackbench.Target(TEST_MICRO_PATH / "tiny.py", micro=True)
+        task = replace(TEST_TASKS["format"], custom_mode="is_pyi=True")
+    target = blackbench.Target(TEST_MICRO_PATH / "tiny.py", micro=True, description="")
 
-    with replace_data_files():
-        bm = task.create_benchmark(target)
+    with replace_resources():
+        bm = Benchmark(task, target)
 
     good_name = f"[{task_name}]-[tiny.py]"
     assert bm.name == good_name
@@ -103,8 +93,6 @@ def test_task_create_benchmark(task_name: str) -> None:
             mode="is_pyi=True",
         )
     assert bm.code == good_code
-    assert bm.target_based == target
-    assert bm.task_based == task
 
 
 def test_managed_workdir(tmp_path, capsys):
@@ -115,8 +103,7 @@ def test_managed_workdir(tmp_path, capsys):
             assert entries[0].name.startswith("blackbench")
             captured = capsys.readouterr()
             assert (
-                f"[*] Created temporary workdir at `{tmp_path!s}{DIR_SEP}blackbench"
-                in captured.out
+                f"[*] Created temporary workdir at `{tmp_path!s}{DIR_SEP}blackbench" in captured.out
             )
             raise RuntimeError
 
@@ -131,18 +118,6 @@ def test_managed_workdir(tmp_path, capsys):
     ids=["micro", "normal"],
 )
 def test_target_name(micro: bool, tpath: Path) -> None:
-    with replace_data_files():
-        t = blackbench.Target(tpath / "ello.py", micro=micro)
+    with replace_resources():
+        t = blackbench.Target(tpath / "ello.py", micro=micro, description="")
         assert t.name == "ello.py"
-
-
-@pytest.mark.parametrize(
-    "micro, good_targets",
-    [(True, TEST_MICRO_TARGETS), (False, TEST_NORMAL_TARGETS)],
-    ids=["micro", "normal"],
-)
-def test_get_provided_targets(micro: bool, good_targets: List[Path]):
-    with replace_data_files():
-        targets = blackbench.get_provided_targets(micro=micro)
-        expected = [blackbench.Target(p, micro) for p in good_targets]
-        assert targets == expected
