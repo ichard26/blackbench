@@ -29,6 +29,39 @@ blackbench should work just fine, but may have bugs and other half-implemented f
 pip install git+git://github.com/ichard26/blackbench
 ```
 
+`````{tip}
+
+You can enable tab completion following these instructions:
+
+  ````{tab} Bash
+  Add this to ``~/.bashrc``:
+
+  ```bash
+  eval "$(_BLACKBENCH_COMPLETE=bash_source BLACKBENCH)"
+  ```
+  ````
+
+  ````{tab} Zsh
+  Add this to ``~/.zshrc``:
+
+  ```zsh
+  eval "$(_FOO_BAR_COMPLETE=zsh_source foo-bar)"
+  ```
+  ````
+
+  ````{tab} Fish
+  Add this to ``~/.config/fish/completions/foo-bar.fish``:
+
+  ```fish
+  eval (env _FOO_BAR_COMPLETE=fish_source foo-bar)
+  ```
+
+  ````
+
+Oh and my apologies if your shell isn't supported, I'm just using Click's built-in framework so
+it's out of my control.
+`````
+
 ## Tuning your system
 
 To get reliable results, the system should be tuned to avoid system jitter.

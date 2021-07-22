@@ -13,10 +13,12 @@ from pathlib import Path
 from typing import List, Optional, Sequence, Tuple, Union
 
 import click
+import cloup
 import pyperf
+from click.shell_completion import CompletionItem
+from cloup import HelpFormatter, HelpTheme
 
 from blackbench import resources
-from blackbench.clickhacks import CustomHelpCommand
 from blackbench.resources import FormatTask, Target, Task
 from blackbench.utils import err, log, managed_workdir, warn
 
@@ -87,7 +89,7 @@ class TaskType(click.ParamType):
             task = resources.tasks[value.casefold()]
         except KeyError:
             choices_str = ", ".join(resources.tasks.keys())
-            self.fail(f"{value} is not one of {choices_str}")
+            self.fail(f"{value} is not one of {choices_str}.")
 
         assert ctx is not None
         if isinstance(task, FormatTask):
@@ -98,6 +100,11 @@ class TaskType(click.ParamType):
 
     def get_metavar(self, param: click.Parameter) -> str:
         return "[" + "|".join(resources.tasks.keys()) + "]"
+
+    def shell_complete(
+        self, ctx: click.Context, param: click.Parameter, incomplete: str
+    ) -> List[CompletionItem]:
+        return [CompletionItem(t.name, help=t.description) for t in resources.tasks.values()]
 
 
 class TargetSpecifierType(click.ParamType):
@@ -118,8 +125,15 @@ class TargetSpecifierType(click.ParamType):
     def get_metavar(self, param: click.Parameter) -> str:
         return "[$target-id|micro|normal|all]"
 
+    def shell_complete(
+        self, ctx: click.Context, param: click.Parameter, incomplete: str
+    ) -> List[CompletionItem]:
+        items = [CompletionItem(t.name, help=t.description) for t in resources.targets.values()]
+        items.extend(CompletionItem(group) for group in ("micro", "normal", "all"))
+        return items
 
-@click.group(context_settings=dict(help_option_names=["-h", "--help"], max_content_width=90))
+
+@cloup.group(formatter_settings=HelpFormatter.settings(theme=HelpTheme.light(), max_width=85))
 @click.version_option(
     __version__, package_name=__file__, message="%(prog)s %(version)s, from %(package)s"
 )
@@ -142,7 +156,13 @@ def main(ctx: click.Context) -> None:
     """
 
 
-@main.command("run", short_help="Run benchmarks and dump results.", cls=CustomHelpCommand)
+@main.command(
+    "run",
+    short_help="Run benchmarks and dump results.",
+    formatter_settings=HelpFormatter.settings(
+        max_width=85, theme=HelpTheme.light(), col2_min_width=10 * 10
+    ),
+)
 @click.argument(
     "dump_path",
     metavar="result-filepath",
@@ -151,43 +171,47 @@ def main(ctx: click.Context) -> None:
     ),
 )
 @click.argument("pyperf-args", metavar="[-- pyperf-args]", nargs=-1, type=click.UNPROCESSED)
-@click.option(
-    "--task",
-    default="format",
-    type=TaskType(),
-    help="The area of concern to benchmark. [default: format]",
-)
-@click.option(
-    "--targets",
-    default="all",
-    show_default=True,
-    type=TargetSpecifierType(),
-    help=(
-        "Which kind(s) of code files should be used as the task's input?"
-        " Normal targets are real-world code files and therefore lead to data that"
-        " more represents real-life scenarios. Micro targets are code files that "
-        " usually are focused on testing performance of a specific area of Black."
+@cloup.option_group(
+    "Benchmark selection & customization",
+    click.option(
+        "--task",
+        default="format",
+        type=TaskType(),
+        help="The area of concern to benchmark.  [default: format]",
+    ),
+    click.option(
+        "--targets",
+        default="all",
+        show_default=True,
+        type=TargetSpecifierType(),
+        help=(
+            "The code files to use as the task's input."
+            " Normal targets are real-world code files and therefore lead to data that"
+            " more represents real-life scenarios. On the other hand, micro targets "
+            " usually are very focused on specific parts of Black."
+        ),
+    ),
+    click.option(
+        "--format-config",
+        is_eager=True,
+        help=(
+            "Arguments to pass to black.Mode for format tasks. Must be valid argument"
+            ' Python code. For example: "experimental_string_processing=True". The context the'
+            " value will be substituted in has the Black package imported."
+        ),
     ),
 )
-@click.option(
-    "--fast",
-    default=False,
-    is_flag=True,
-    help=(
-        "Collect less values during benchmarking for faster result turnaround, at the"
-        " price of result quality. Although with a tuned system, the reduction in"
-        " execution time far usually outstrips the drop in result quality. An alias"
-        " for `-- --fast`."
-    ),
-    show_default=True,
-)
-@click.option(
-    "--format-config",
-    is_eager=True,
-    help=(
-        "Arguments to pass to black.Mode for format tasks. Must be valid argument"
-        " Python code. Ex. `experimental_string_processing=True`. The context the"
-        " value will be substituted in has the Black package imported."
+@cloup.option_group(
+    "Benchmarking parameters",
+    click.option(
+        "--fast",
+        default=False,
+        is_flag=True,
+        help=(
+            "Collect less data values for faster result turnaround, at the price of quality."
+            " Although with a tuned system, the reduction in execution time far usually outstrips"
+            " the drop in result quality. An alias for `-- --fast`."
+        ),
     ),
 )
 @click.pass_context
@@ -203,6 +227,9 @@ def cmd_run(
     """
     Run benchmarks and dump results. The produced JSON file can be analyzed with
     pyperf.
+
+    Please note that it's important you take measures to improve benchmark stability via
+    system tuning and/or benchmarking parameter tuning (eg. --affinity).
     """
     start_time = time.perf_counter()
 
@@ -212,7 +239,7 @@ def cmd_run(
         err("Black isn't importable in the current environment.")
         ctx.exit(1)
 
-    if not isinstance(task, FormatTask) and ctx.params["format_config"]:
+    if not isinstance(task, FormatTask) and format_config:
         warn(
             "Ignoring `--format-config` option since it doesn't make sense"
             f" for the `{task.name}` task."
@@ -247,7 +274,7 @@ def cmd_run(
         log("No results were collected.")
 
     end_time = time.perf_counter()
-    log(f"Blackbench run finished in {round(end_time - start_time, 3)} seconds.")
+    log(f"Blackbench run finished in {end_time - start_time:.3f} seconds.")
     ctx.exit(errored)
 
 

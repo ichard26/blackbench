@@ -7,16 +7,31 @@ module = "blackbench"
 author = "Richard Si"
 author-email = "63936253+ichard26@users.noreply.github.com"
 home-page = "https://github.com/ichard26/blackbench"
-classifiers = ["License :: OSI Approved :: MIT License"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Testing",
+    "Typing :: Typed",
+]
 description-file = "README.md"
 requires = [
     "click>=8.0.0",
-    "pyperf>=2.0.0",
+    "cloup>=0.9.0",
+    "pyperf~=2.0.0",
 ]
 requires-python = ">=3.8"
 
 [tool.flit.scripts]
 blackbench = "blackbench:main"
+
+[tool.flit.metadata.urls]
+Documentation = "https://blackbench.readthedocs.io/en/stable"
+Changelog = "https://blackbench.readthedocs.io/en/latest/changelog.html"
 
 [tool.black]
 line-length = 100
@@ -35,7 +50,7 @@ profile = "black"
 skip_gitignore = true
 extend_skip_glob = ["*-template.py", "*-targets", "tests/data/*"]
 py_version = "38"
-known_third_party = ["click", "pyperf", "colorama"]
+known_third_party = ["click", "cloup", "pyperf"]
 known_first_party = ["blackbench"]
 
 [tool.coverage.run]
