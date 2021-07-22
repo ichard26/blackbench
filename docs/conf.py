@@ -9,10 +9,7 @@ import sys
 try:
     import blackbench
 except ImportError:
-    print(
-        "ERROR: building the documentation requires an importable installation of"
-        " blackbench."
-    )
+    print("ERROR: building the documentation requires an importable installation of blackbench.")
     sys.exit(1)
 
 # -- Project information -----------------------------------------------------

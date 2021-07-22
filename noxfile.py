@@ -147,9 +147,7 @@ def tests_cov(session: nox.Session) -> None:
 def lint(session: nox.Session) -> None:
     """Run linters and formatters."""
     install_requirement(session, "lint-base")
-    session.run(
-        "pre-commit", "run", "--all-files", "--show-diff-on-failure", *session.posargs
-    )
+    session.run("pre-commit", "run", "--all-files", "--show-diff-on-failure", *session.posargs)
 
 
 @nox.session()
@@ -168,8 +166,6 @@ def setup_env(session: nox.Session) -> None:
     wipe(session, env_dir)
     session.run(sys.executable, "-m", "virtualenv", str(env_dir), silent=True)
     session.run(bin_dir / "python", "-m", "pip", "install", "flit", silent=True)
-    session.run(
-        bin_dir / "python", "-m", "flit", "install", _FLIT_EDITABLE, silent=True
-    )
+    session.run(bin_dir / "python", "-m", "flit", "install", _FLIT_EDITABLE, silent=True)
     session.run(bin_dir / "python", "-m", "pip", "install", "black", silent=True)
     session.log("Virtual environment at project root named `venv` ready to go!")
