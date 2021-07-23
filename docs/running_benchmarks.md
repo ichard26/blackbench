@@ -12,7 +12,7 @@ dump results to:
 ichard26@acer-ubuntu:~/programming/oss/blackbench$ blackbench run example.json
 [*] Will dump results to `example.json`.
 [*] Created temporary workdir at `/tmp/blackbench-workdir-hw781x4m`.
-[*] Running `[format]-[strings-list.py]` benchmark (1/1)
+[*] Running `fmt-strings-list` benchmark (1/1)
 .....................
 WARNING: the benchmark result may be unstable
 * the maximum (75.8 ms) is 50% greater than the mean (50.6 ms)
@@ -22,7 +22,7 @@ Run 'python -m pyperf system tune' command to reduce the system jitter.
 Use pyperf stats, pyperf dump and pyperf hist to analyze results.
 Use --quiet option to hide these warnings.
 
-[format]-[strings-list.py]: Mean +- std dev: 50.6 ms +- 4.1 ms
+fmt-strings-list: Mean +- std dev: 50.6 ms +- 4.1 ms
 [*] Took 29.607 seconds.
 [*] Cleaning up.
 [*] Results dumped.
@@ -58,12 +58,12 @@ your specific environment and also can be annoying to undo (a simple reboot shou
 
 ## Task & target selection
 
-By default, all targets will selected (i.e. `--targets all`) with the `format` task. If
+By default, all targets will selected (i.e. `--targets all`) with the `fmt` task. If
 you'd like to use a different task and/or use a specific kind of targets, there's
 options for that:
 
 `--task`
-: Choices are `parse`, `format-fast`, and `format`.
+: Choices are `parse`, `fmt-fast`, and `fmt`.
 
 `--targets`
 : Choices are `micro`, `normal`, and `all`.
@@ -132,7 +132,7 @@ def format_func(code):
     except black.NothingChanged:
         pass
 
-runner.bench_func("[example-task]-[example-target]", format_func, code)
+runner.bench_func("example-task-example-target", format_func, code)
 ```
 
 [^1]: Although note that not all options will play nicely with blackbench's integration with

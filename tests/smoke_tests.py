@@ -15,8 +15,8 @@ from .utils import PAINT_TASK, fast_run, replace_targets
 
 @pytest.mark.parametrize("task", resources.tasks.keys())
 def test_provided_tasks(task: str, tmp_path: Path, tmp_result: Path, run_cmd):
-    cmd = ["run", str(tmp_result), "--task", task, "-t", "tiny.py"]
-    if task.startswith("format"):
+    cmd = ["run", str(tmp_result), "--task", task, "-t", "tiny"]
+    if task.startswith("fmt"):
         cmd.extend(["--format-config", "is_pyi=True"])
 
     with patch("subprocess.run", fast_run), replace_targets():

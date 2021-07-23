@@ -33,7 +33,7 @@ THIS_DIR = Path(__file__).parent
 
 class Benchmark:
     def __init__(self, task: Task, target: Target) -> None:
-        self.name = f"[{task.name}]-[{target.name}]"
+        self.name = f"{task.name}-{target.name}"
         self.code = task.create_benchmark_script(self.name, target)
         self.micro = target.micro
         self.target = target
@@ -46,7 +46,9 @@ def run_suite(
     results: List[pyperf.Benchmark] = []
     errored = False
     for i, bm in enumerate(benchmarks, start=1):
-        log(f"Running `{bm.name}` benchmark ({i}/{len(benchmarks)})")
+        bm_type = f"{'micro' if bm.micro else ''}benchmark"
+        bm_count = f"({i}/{len(benchmarks)})"
+        log(f"Running `{bm.name}` {bm_type} {bm_count}")
         script = workdir / f"{i}.py"
         script.write_text(bm.code, encoding="utf8")
         result_file = workdir / f"{i}.json"
@@ -126,7 +128,7 @@ class TargetSpecifierType(click.ParamType):
         )
 
     def get_metavar(self, param: click.Parameter) -> str:  # pragma: no cover
-        return "[$target-id|micro|normal|all]"
+        return "[$target-name|micro|normal|all]"
 
     def shell_complete(
         self, ctx: click.Context, param: click.Parameter, incomplete: str
@@ -196,9 +198,9 @@ def main(ctx: click.Context) -> None:
     "Benchmark selection & customization",
     click.option(
         "--task",
-        default="format",
+        default="fmt",
         type=TaskType(),
-        help="The area of concern to benchmark.  [default: format]",
+        help="The area of concern to benchmark.  [default: fmt]",
     ),
     click.option(
         "-t",

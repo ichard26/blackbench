@@ -23,7 +23,7 @@ class Target:
     @property
     def name(self) -> str:
         base = MICRO_DIR if self.micro else NORMAL_DIR
-        return self.path.relative_to(base).as_posix()
+        return self.path.relative_to(base).with_suffix("").as_posix()
 
 
 @dataclass
@@ -65,12 +65,12 @@ micro_targets = [t for t in targets.values() if t.micro]
 
 _tasks = [
     FormatTask(
-        "format",
+        "fmt",
         TASK_DIR / "format-template.py",
         description="Standard Black run although safety checks will *always* run.",
     ),
     FormatTask(
-        "format-fast",
+        "fmt-fast",
         TASK_DIR / "format-fast-template.py",
         description="Standard Black run but safety checks are *disabled*.",
     ),

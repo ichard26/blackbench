@@ -27,15 +27,15 @@ def test_info_cmd(run_cmd):
         results = run_cmd("info")
     good = """\
 Tasks:
-  paint, format
+  paint, fmt
 
 Normal targets:
-  1. hello-world.py
-  2. goodbye-internet.pyi
-  3. i/heard/you/like/nested.py
+  1. hello-world
+  2. goodbye-internet
+  3. i/heard/you/like/nested
 
 Micro targets:
-  1. tiny.py
+  1. tiny
 """
     assert results.output == good
 
@@ -93,10 +93,10 @@ def test_run_cmd(tmp_result: Path, run_cmd):
     assert "ERROR" not in result.output and "WARNING" not in result.output
     assert output_lines[0] == "[*] Will dump results to `results.json`."
     assert output_lines[1].startswith("[*] Created temporary workdir at `")
-    assert output_lines[2] == "[*] Running `[format]-[goodbye-internet.pyi]` benchmark (1/4)"
-    assert output_lines[4] == "[*] Running `[format]-[hello-world.py]` benchmark (2/4)"
-    assert output_lines[6] == "[*] Running `[format]-[i/heard/you/like/nested.py]` benchmark (3/4)"
-    assert output_lines[8] == "[*] Running `[format]-[tiny.py]` benchmark (4/4)"
+    assert output_lines[2] == "[*] Running `fmt-goodbye-internet` benchmark (1/4)"
+    assert output_lines[4] == "[*] Running `fmt-hello-world` benchmark (2/4)"
+    assert output_lines[6] == "[*] Running `fmt-i/heard/you/like/nested` benchmark (3/4)"
+    assert output_lines[8] == "[*] Running `fmt-tiny` microbenchmark (4/4)"
     assert output_lines[-3] == "[*] Cleaning up."
     assert output_lines[-2] == "[*] Results dumped."
     assert output_lines[-1].startswith("[*] Blackbench run finished in")
@@ -138,9 +138,9 @@ def test_run_cmd_with_nonall_group(tmp_result: Path, run_cmd, group: str):
 
 # fmt: off
 @pytest.mark.parametrize("values, expected", [
-    (["hello-world.py"], {"hello-world.py"}),
-    (["micro", "hello-world.py"], {"tiny.py", "hello-world.py"}),
-    (["micro", "micro"], {"tiny.py"}),
+    (["hello-world"], {"hello-world"}),
+    (["micro", "hello-world"], {"tiny", "hello-world"}),
+    (["micro", "micro"], {"tiny"}),
 ])
 # fmt: on
 def test_run_cmd_targets_opt(run_cmd, tmp_result: Path, values: List[str], expected: Set[str]):
@@ -165,7 +165,7 @@ def test_run_cmd_with_format_config(tmp_result: Path, run_cmd):
     with patch("subprocess.run", wraps=mock), replace_resources():
         # fmt: off
         result = run_cmd([
-            "run", str(tmp_result), "-t", "tiny.py", "--format-config", "is_pyi=True",
+            "run", str(tmp_result), "-t", "tiny", "--format-config", "is_pyi=True",
         ])
         # fmt: on
 
@@ -195,9 +195,8 @@ def test_run_cmd_with_preexisting_file(tmp_result: Path, run_cmd):
     assert result.exit_code == 1
     good = """[*] WARNING: A file / directory already exists at `results.json`.
 [*] Do you want to overwrite and continue? [y/N]: n
-Aborted!
 """
-    assert result.output == good
+    assert good in result.output
 
 
 def test_run_cmd_with_preexisting_file_but_continue(tmp_result: Path, run_cmd):
@@ -222,8 +221,7 @@ def test_run_cmd_with_pyperf_args(tmp_result: Path, run_cmd):
         # fmt: off
         result = run_cmd([
             "run", str(tmp_result),
-            "-t", "tiny.py",
-            "--task", "format",
+            "-t", "tiny",
             "--",
             "--fast",
             "--values", "1",

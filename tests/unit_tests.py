@@ -61,26 +61,26 @@ def test_task_callback_custom_config_warning(run_cmd, tmp_result):
 
 @pytest.mark.parametrize("format_config", ["", "is_pyi=True"])
 def test_task_callback_with_format_task(format_config: str):
-    good = TEST_TASKS["format"]
+    good = TEST_TASKS["fmt"]
     good = replace(good, custom_mode=format_config)
     ctx = FakeContext(params={"format_config": format_config})
     with replace_resources():
-        task = blackbench.TaskType().convert("format", FakeParameter(), ctx)
+        task = blackbench.TaskType().convert("fmt", FakeParameter(), ctx)
     assert task == good
 
 
-@pytest.mark.parametrize("task_name", ["paint", "format"])
+@pytest.mark.parametrize("task_name", ["paint", "fmt"])
 def test_task_create_benchmark(task_name: str) -> None:
     if task_name == "paint":
         task = PAINT_TASK
     else:
-        task = replace(TEST_TASKS["format"], custom_mode="is_pyi=True")
+        task = replace(TEST_TASKS["fmt"], custom_mode="is_pyi=True")
     target = blackbench.Target(TEST_MICRO_PATH / "tiny.py", micro=True, description="")
 
     with replace_resources():
         bm = Benchmark(task, target)
 
-    good_name = f"[{task_name}]-[tiny.py]"
+    good_name = f"{task_name}-tiny"
     assert bm.name == good_name
     assert bm.micro
     good_template = (TASKS_DIR / f"{task_name}-template.py").read_text(encoding="utf8")
@@ -120,4 +120,4 @@ def test_managed_workdir(tmp_path, capsys):
 def test_target_name(micro: bool, tpath: Path) -> None:
     with replace_resources():
         t = blackbench.Target(tpath / "ello.py", micro=micro, description="")
-        assert t.name == "ello.py"
+        assert t.name == "ello"

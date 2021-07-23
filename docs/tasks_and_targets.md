@@ -12,22 +12,22 @@ annoying. And even if providing scripts for all of the different possible config
 was possible, they would be annoying to maintain.
 
 Benchmarks ran by blackbench are named using the task and target they are based off. For
-example a benchmark using the `parse` task and the `strings-list.py` target would be
-named `[parse]-[strings-list.py]`.
+example a benchmark using the `parse` task and the `strings-list` target would be named
+`parse-strings-list`.
 
 Below are details about the tasks and targets that ship with blackbench:
 
 ## Tasks
 
-- `format`: standard Black formatting behaviour although safety checks will **always**
-  be run
-- `format-fast`: like `format` but using `--fast` so safety checks are disabled
+- `fmt`: standard Black formatting behaviour although safety checks will **always** be
+  run
+- `fmt-fast`: like `fmt` but using `--fast` so safety checks are disabled
 - `parse`: only do blib2to3 parsing
 
 (labels/format-task-danger)=
 
 ```{important}
-The `format` task forces safety checks to run (by adding trailing newlines) or else it could
+The `fmt` task forces safety checks to run (by adding trailing newlines) or else it could
 skew the data in a nasty way. Normally safety checks only run if changes are made so there's
 a possibility one version of Black will have to do more work over the other one you're
 comparing against, totally throwing off the results for any sort of comparisons.
@@ -47,7 +47,7 @@ string processing).
 
 **Micro targets:**
 
-- `strings-list.py`: a single list containing a few hundred of sometimes comma separated
+- `strings-list`: a single list containing a few hundred of sometimes comma separated
   strings
 
 (labels/task-compatibility)=
@@ -60,19 +60,19 @@ implementation. This provides a benchmarking speedup and is also unavoidable for
 level tasks like `parse`. Due to this, each task imposes restrictions to what version of
 Black their benchmarks can be run under:
 
-- `format` and `format-fast`: >= 19.3b0
+- `fmt` and `fmt-fast`: >= 19.3b0
 - `parse`: >= 21.5b1
 
 ## Useful commands
 
 Blackbench does have a few commands that interact directly with tasks and targets:
 
-`blackbench dump ${ID}`
+`blackbench dump ${name}`
 
 : Dumps the source code for a specific task or target.
 
   ```console
-  dev@example:~$ blackbench dump format-fast
+  dev@example:~$ blackbench dump fmt-fast
   from pathlib import Path
 
   import pyperf
@@ -95,34 +95,34 @@ Blackbench does have a few commands that interact directly with tasks and target
 
 `blackbench info`
 
-: Lists all of the (IDs of the) built-in tasks and targets.
+: Lists all of the built-in tasks and targets.
 
   ```console
   dev@example:~$ blackbench info
   Tasks:
-    parse, format-fast, format
+    fmt, fmt-fast, parse
 
   Normal targets:
-    1. black/__init__.py
-    2. black/brackets.py
-    3. black/cache.py
-    4. black/comments.py
-    5. black/concurrency.py
-    6. black/const.py
-    7. black/debug.py
-    8. black/files.py
-    9. black/linegen.py
-    10. black/lines.py
-    11. black/mode.py
-    12. black/nodes.py
-    13. black/numerics.py
-    14. black/output.py
-    15. black/parsing.py
-    16. black/report.py
-    17. black/rusty.py
-    18. black/strings.py
-    19. black/trans.py
+    1. black/__init__
+    2. black/brackets
+    3. black/cache
+    4. black/comments
+    5. black/concurrency
+    6. black/const
+    7. black/debug
+    8. black/files
+    9. black/linegen
+    10. black/lines
+    11. black/mode
+    12. black/nodes
+    13. black/numerics
+    14. black/output
+    15. black/parsing
+    16. black/report
+    17. black/rusty
+    18. black/strings
+    19. black/trans
 
   Micro targets:
-    1. strings-list.py
+    1. strings-list
   ```

@@ -23,20 +23,20 @@ TASKS_DIR = DATA_DIR / "tasks"
 
 TEST_TASKS = {
     "paint": Task("paint", DATA_DIR / "tasks" / "paint-template.py", description=""),
-    "format": FormatTask("format", DATA_DIR / "tasks" / "format-template.py", description=""),
+    "fmt": FormatTask("fmt", DATA_DIR / "tasks" / "fmt-template.py", description=""),
 }
 
 TEST_NORMAL_PATH = DATA_DIR / "normal-targets"
 TEST_MICRO_PATH = DATA_DIR / "micro-targets"
 TEST_TARGETS = {
-    "hello-world.py": Target(TEST_NORMAL_PATH / "hello-world.py", micro=False, description=""),
-    "goodbye-internet.pyi": Target(
+    "hello-world": Target(TEST_NORMAL_PATH / "hello-world.py", micro=False, description=""),
+    "goodbye-internet": Target(
         TEST_NORMAL_PATH / "goodbye-internet.pyi", micro=False, description=""
     ),
-    "i/heard/you/like/nested.py": Target(
+    "i/heard/you/like/nested": Target(
         TEST_NORMAL_PATH / "i" / "heard" / "you" / "like" / "nested.py", micro=False, description=""
     ),
-    "tiny.py": Target(TEST_MICRO_PATH / "tiny.py", micro=True, description=""),
+    "tiny": Target(TEST_MICRO_PATH / "tiny.py", micro=True, description=""),
 }
 TEST_MICRO_TARGETS = [t for t in TEST_TARGETS.values() if t.micro]
 TEST_NORMAL_TARGETS = [t for t in TEST_TARGETS.values() if not t.micro]

@@ -20,6 +20,11 @@ Date of release: *unreleased*
   thanks to {pypi}`cloup`, and 2) official autocompletion support.
 - The `--targets` (or now `-t`!) option can now also specify a specific target. You can
   also now repeat the option to additively choose your own custom collection of targets.
+- The target name now doesn't include the suffix (eg. `black/cache.py` ->
+  `black/cache`). Also the benchmark name format has been changed to
+  `$task-name-$target-name` (eg. `[parse]-[black/cache.py]` -> `parse-black/cache`).
+  Finally `format` and `format-fast` were renamed to `fmt` and `fmt-fast` respectively.
+  These changes should make the names easier to use (even if less pretty!).
 
 **Project**:
 
