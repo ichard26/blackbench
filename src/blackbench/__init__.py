@@ -48,7 +48,7 @@ def run_suite(
     for i, bm in enumerate(benchmarks, start=1):
         bm_type = f"{'micro' if bm.micro else ''}benchmark"
         bm_count = f"({i}/{len(benchmarks)})"
-        log(f"Running `{bm.name}` {bm_type} {bm_count}")
+        log(f"Running `{bm.name}` {bm_type} {bm_count}", bold=True)
         script = workdir / f"{i}.py"
         script.write_text(bm.code, encoding="utf8")
         result_file = workdir / f"{i}.json"
@@ -62,7 +62,7 @@ def run_suite(
             errored = True
         else:
             t1 = time.perf_counter()
-            log(f"Took {round(t1 - t0, 3)} seconds.")
+            log(f"Took {round(t1 - t0, 3)} seconds.", bold=True)
 
             result = pyperf.Benchmark.loads(result_file.read_text(encoding="utf8"))
             results.append(result)
@@ -260,10 +260,16 @@ def cmd_run(
     start_time = time.perf_counter()
 
     try:
-        import black  # noqa: F401
+        import black
     except ImportError:
         err("Black isn't importable in the current environment.")
         ctx.exit(1)
+
+    log(
+        f"Versions: blackbench: {__version__}, pyperf: {pyperf.__version__}"
+        f" black: {black.__version__}",
+        fg="cyan",
+    )
 
     if not isinstance(task, FormatTask) and format_config:
         warn(
@@ -274,9 +280,7 @@ def cmd_run(
     pretty_dump_path = str(dump_path.relative_to(os.getcwd()))
     if dump_path.exists():
         warn(f"A file / directory already exists at `{pretty_dump_path}`.")
-        click.confirm(
-            click.style("[*] Do you want to overwrite and continue?", bold=True), abort=True
-        )
+        click.confirm("[*] Do you want to overwrite and continue?", abort=True)
     log(f"Will dump results to `{pretty_dump_path}`.")
 
     benchmarks = [Benchmark(task, target) for target in targets]
@@ -286,6 +290,7 @@ def cmd_run(
         prepped_pyperf_args.append("--fast")
 
     with managed_workdir() as workdir:
+        log("Alright, let's start!", fg="green", bold=True)
         suite_results, errored = run_suite(benchmarks, prepped_pyperf_args, workdir)
 
     if suite_results:
@@ -295,7 +300,7 @@ def cmd_run(
         log("No results were collected.")
 
     end_time = time.perf_counter()
-    log(f"Blackbench run finished in {end_time - start_time:.3f} seconds.")
+    log(f"Blackbench run finished in {end_time - start_time:.3f} seconds.", fg="green", bold=True)
     ctx.exit(errored)
 
 

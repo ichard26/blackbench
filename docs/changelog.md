@@ -29,6 +29,7 @@ Date of release: *unreleased*
   non-pre-black-formatted code! Run `blackbench info` for more!
 - The output from the `info` command is now colorful and more informational. Line counts
   and descriptions are now also emitted.
+- The output emitted during the `run` command is now colourful and a bit more human :)
 
 **Project**:
 

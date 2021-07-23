@@ -90,14 +90,16 @@ def test_run_cmd(tmp_result: Path, run_cmd):
     assert tmp_result.read_text("utf8") == good_result
 
     output_lines = result.output.splitlines()
-    assert len(output_lines) == 13
+    assert len(output_lines) == 15
     assert "ERROR" not in result.output and "WARNING" not in result.output
-    assert output_lines[0] == "[*] Will dump results to `results.json`."
-    assert output_lines[1].startswith("[*] Created temporary workdir at `")
-    assert output_lines[2] == "[*] Running `fmt-goodbye-internet` benchmark (1/4)"
-    assert output_lines[4] == "[*] Running `fmt-hello-world` benchmark (2/4)"
-    assert output_lines[6] == "[*] Running `fmt-i/heard/you/like/nested` benchmark (3/4)"
-    assert output_lines[8] == "[*] Running `fmt-tiny` microbenchmark (4/4)"
+    assert output_lines[0].startswith("[*] Versions: blackbench: ")
+    assert output_lines[1] == "[*] Will dump results to `results.json`."
+    assert output_lines[2].startswith("[*] Created temporary workdir at `")
+    assert output_lines[3] == "[*] Alright, let's start!"
+    assert output_lines[4] == "[*] Running `fmt-goodbye-internet` benchmark (1/4)"
+    assert output_lines[6] == "[*] Running `fmt-hello-world` benchmark (2/4)"
+    assert output_lines[8] == "[*] Running `fmt-i/heard/you/like/nested` benchmark (3/4)"
+    assert output_lines[10] == "[*] Running `fmt-tiny` microbenchmark (4/4)"
     assert output_lines[-3] == "[*] Cleaning up."
     assert output_lines[-2] == "[*] Results dumped."
     assert output_lines[-1].startswith("[*] Blackbench run finished in")

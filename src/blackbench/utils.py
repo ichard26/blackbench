@@ -7,20 +7,18 @@ from typing import Any, Dict, Generator, List
 import click
 
 
-def log(msg: str, **kwargs: Dict[str, Any]) -> None:
-    _kwargs: Dict[str, Any] = {"bold": True}
-    _kwargs.update(kwargs)
-    click.secho(f"[*] {msg}", **_kwargs)
+def log(msg: str, **kwargs: Any) -> None:
+    click.secho(f"[*] {msg}", **kwargs)
 
 
-def warn(msg: str, **kwargs: Dict[str, Any]) -> None:
-    _kwargs: Dict[str, Any] = {"fg": "yellow"}
+def warn(msg: str, **kwargs: Any) -> None:
+    _kwargs: Dict[str, Any] = {"bold": True, "fg": "yellow"}
     _kwargs.update(kwargs)
     log(f"WARNING: {msg}", **_kwargs)
 
 
-def err(msg: str, **kwargs: Dict[str, Any]) -> None:
-    _kwargs: Dict[str, Any] = {"fg": "red"}
+def err(msg: str, **kwargs: Any) -> None:
+    _kwargs: Dict[str, Any] = {"bold": True, "fg": "red"}
     _kwargs.update(kwargs)
     log(f"ERROR: {msg}", **_kwargs)
 
