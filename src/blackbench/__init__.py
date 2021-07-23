@@ -304,17 +304,27 @@ def cmd_run(
 def cmd_info(ctx: click.Context) -> None:
     """Show available targets and tasks."""
 
+    def print_item(index: int, name: str, desc: str, lines: Optional[int] = None) -> None:
+        assert desc, "tasks / targets should have a non-empty description"
+        lines_str = click.style(f"[{lines} lines] ", fg="cyan") if lines else ""
+        prepped_desc = click.style(desc, dim=True)
+        click.echo(f"  {i}. {name} {lines_str}- {prepped_desc}")
+
     click.secho("Tasks:", bold=True)
-    click.echo("  " + ", ".join(resources.tasks.keys()) + "\n")
+    for i, task in enumerate(resources.tasks.values(), start=1):
+        print_item(i, task.name, task.description)
+    click.echo()
 
     click.secho("Normal targets:", bold=True)
-    for i, t in enumerate(resources.normal_targets, start=1):
-        click.secho(f"  {i}. {t.name}")
+    for i, target in enumerate(resources.normal_targets, start=1):
+        line_count = len(target.path.read_text("utf8").splitlines())
+        print_item(i, target.name, target.description, line_count)
     click.echo()
 
     click.secho("Micro targets:", bold=True)
-    for i, t in enumerate(resources.micro_targets, start=1):
-        click.secho(f"  {i}. {t.name}")
+    for i, target in enumerate(resources.micro_targets, start=1):
+        line_count = len(target.path.read_text("utf8").splitlines())
+        print_item(i, target.name, target.description, line_count)
 
 
 @main.command("dump")

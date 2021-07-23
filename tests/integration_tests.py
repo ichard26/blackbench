@@ -27,15 +27,16 @@ def test_info_cmd(run_cmd):
         results = run_cmd("info")
     good = """\
 Tasks:
-  paint, fmt
+  1. paint - A joke about Black @ichard26 makes too much
+  2. fmt - basically normal fmt but copied for stability
 
 Normal targets:
-  1. hello-world
-  2. goodbye-internet
-  3. i/heard/you/like/nested
+  1. hello-world [74 lines] - a
+  2. goodbye-internet [57 lines] - b
+  3. i/heard/you/like/nested [1 lines] - c
 
 Micro targets:
-  1. tiny
+  1. tiny [1 lines] - very tiny indeed
 """
     assert results.output == good
 

@@ -43,12 +43,16 @@ string processing).
 
 **Normal targets:**
 
-- `black/*`: a checkout of 21.6b0 of Black's source code (19 targets)
+- `black/*`: source code files from {pypi}`Black` 21.6b0 (9 targets)
+- `flit/*` & `filt_core/*`: source code files from {pypi}`Flit` 3.2.0 (3 targets)
 
 **Micro targets:**
 
-- `strings-list`: a single list containing a few hundred of sometimes comma separated
-  strings
+- `dict-literal`: a long dictionary literal
+- `comments`: code that uses a lot of (maybe special) comments
+- `list-literal`: a long list literal
+- `nested`: nested functions, literals, if statements ... all the nested!
+- `strings-list`: a list containing 100s of sometimes comma separated strings
 
 (labels/task-compatibility)=
 
@@ -100,29 +104,28 @@ Blackbench does have a few commands that interact directly with tasks and target
   ```console
   dev@example:~$ blackbench info
   Tasks:
-    fmt, fmt-fast, parse
+    1. fmt - Standard Black run although safety checks will *always* run
+    2. fmt-fast - Standard Black run but safety checks are *disabled*
+    3. parse - Only do blib2to3 parsing
 
   Normal targets:
-    1. black/__init__
-    2. black/brackets
-    3. black/cache
-    4. black/comments
-    5. black/concurrency
-    6. black/const
-    7. black/debug
-    8. black/files
-    9. black/linegen
-    10. black/lines
-    11. black/mode
-    12. black/nodes
-    13. black/numerics
-    14. black/output
-    15. black/parsing
-    16. black/report
-    17. black/rusty
-    18. black/strings
-    19. black/trans
+    1. black/__init__ [1132 lines] - Black source code from 21.6b0
+    2. black/brackets [334 lines] - Black source code from 21.6b0
+    3. black/comments [272 lines] - Black source code from 21.6b0
+    4. black/linegen [985 lines] - Black source code from 21.6b0
+    5. black/lines [734 lines] - Black source code from 21.6b0
+    6. black/mode [123 lines] - Black source code from 21.6b0
+    7. black/nodes [843 lines] - Black source code from 21.6b0
+    8. black/output [84 lines] - Black source code from 21.6b0
+     9. black/strings [216 lines] - Black source code from 21.6b0
+    10. flit/install [415 lines] - Flit source code from 3.2.0
+    11. flit/sdist [216 lines] - Flit source code from 3.2.0
+    12. flit_core/config [630 lines] - Flit source code from 3.2.0
 
   Micro targets:
-    1. strings-list
+    1. dict-literal [150 lines] - A long dictionary literal
+    2. comments [97 lines] - Code that uses a lot of (maybe special) comments
+    3. list-literal [150 lines] - A long list literal
+    4. nested [41 lines] - Nested functions, literals, if statements ... all the nested!
+    5. strings-list [52 lines] - A list containing 100s of sometimes comma separated strings
   ```

@@ -25,6 +25,10 @@ Date of release: *unreleased*
   `$task-name-$target-name` (eg. `[parse]-[black/cache.py]` -> `parse-black/cache`).
   Finally `format` and `format-fast` were renamed to `fmt` and `fmt-fast` respectively.
   These changes should make the names easier to use (even if less pretty!).
+- Redid the targets collection to balance out normal vs micro and also add
+  non-pre-black-formatted code! Run `blackbench info` for more!
+- The output from the `info` command is now colorful and more informational. Line counts
+  and descriptions are now also emitted.
 
 **Project**:
 

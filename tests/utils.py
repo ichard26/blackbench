@@ -22,21 +22,31 @@ DATA_DIR = THIS_DIR / "data"
 TASKS_DIR = DATA_DIR / "tasks"
 
 TEST_TASKS = {
-    "paint": Task("paint", DATA_DIR / "tasks" / "paint-template.py", description=""),
-    "fmt": FormatTask("fmt", DATA_DIR / "tasks" / "fmt-template.py", description=""),
+    "paint": Task(
+        "paint",
+        DATA_DIR / "tasks" / "paint-template.py",
+        description="A joke about Black @ichard26 makes too much",
+    ),
+    "fmt": FormatTask(
+        "fmt",
+        DATA_DIR / "tasks" / "fmt-template.py",
+        description="basically normal fmt but copied for stability",
+    ),
 }
 
 TEST_NORMAL_PATH = DATA_DIR / "normal-targets"
 TEST_MICRO_PATH = DATA_DIR / "micro-targets"
 TEST_TARGETS = {
-    "hello-world": Target(TEST_NORMAL_PATH / "hello-world.py", micro=False, description=""),
+    "hello-world": Target(TEST_NORMAL_PATH / "hello-world.py", micro=False, description="a"),
     "goodbye-internet": Target(
-        TEST_NORMAL_PATH / "goodbye-internet.pyi", micro=False, description=""
+        TEST_NORMAL_PATH / "goodbye-internet.pyi", micro=False, description="b"
     ),
     "i/heard/you/like/nested": Target(
-        TEST_NORMAL_PATH / "i" / "heard" / "you" / "like" / "nested.py", micro=False, description=""
+        TEST_NORMAL_PATH / "i" / "heard" / "you" / "like" / "nested.py",
+        micro=False,
+        description="c",
     ),
-    "tiny": Target(TEST_MICRO_PATH / "tiny.py", micro=True, description=""),
+    "tiny": Target(TEST_MICRO_PATH / "tiny.py", micro=True, description="very tiny indeed"),
 }
 TEST_MICRO_TARGETS = [t for t in TEST_TARGETS.values() if t.micro]
 TEST_NORMAL_TARGETS = [t for t in TEST_TARGETS.values() if not t.micro]
