@@ -9,6 +9,7 @@ import subprocess
 import sys
 import time
 from dataclasses import replace
+from operator import attrgetter
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple, Union
 
@@ -35,6 +36,8 @@ class Benchmark:
         self.name = f"[{task.name}]-[{target.name}]"
         self.code = task.create_benchmark_script(self.name, target)
         self.micro = target.micro
+        self.target = target
+        self.task = task
 
 
 def run_suite(
@@ -98,12 +101,12 @@ class TaskType(click.ParamType):
 
         return task
 
-    def get_metavar(self, param: click.Parameter) -> str:
+    def get_metavar(self, param: click.Parameter) -> str:  # pragma: no cover
         return "[" + "|".join(resources.tasks.keys()) + "]"
 
     def shell_complete(
         self, ctx: click.Context, param: click.Parameter, incomplete: str
-    ) -> List[CompletionItem]:
+    ) -> List[CompletionItem]:  # pragma: no cover
         return [CompletionItem(t.name, help=t.description) for t in resources.tasks.values()]
 
 
@@ -114,7 +117,7 @@ class TargetSpecifierType(click.ParamType):
         self, value: str, param: Optional[click.Parameter], ctx: Optional[click.Context]
     ) -> str:
         normalized = value.casefold()
-        if normalized in ("all", "normal", "micro"):
+        if normalized in ("all", "normal", "micro") or normalized in resources.targets.keys():
             return normalized
 
         self.fail(
@@ -122,15 +125,33 @@ class TargetSpecifierType(click.ParamType):
             " nor the ID of a specific target (run 'blackbench info' for a list)."
         )
 
-    def get_metavar(self, param: click.Parameter) -> str:
+    def get_metavar(self, param: click.Parameter) -> str:  # pragma: no cover
         return "[$target-id|micro|normal|all]"
 
     def shell_complete(
         self, ctx: click.Context, param: click.Parameter, incomplete: str
-    ) -> List[CompletionItem]:
+    ) -> List[CompletionItem]:  # pragma: no cover
         items = [CompletionItem(t.name, help=t.description) for t in resources.targets.values()]
         items.extend(CompletionItem(group) for group in ("micro", "normal", "all"))
         return items
+
+
+def targets_callback(
+    ctx: click.Context, param: click.Parameter, specifiers: Tuple[str, ...]
+) -> List[Target]:
+    selected: List[Target] = []
+    for specifier in specifiers:
+        if specifier == "micro":
+            selected.extend(resources.micro_targets)
+        elif specifier == "normal":
+            selected.extend(resources.normal_targets)
+        elif specifier == "all":
+            selected.extend(resources.targets.values())
+        else:
+            selected.append(resources.targets[specifier])
+
+    selected = list(set(selected))
+    return sorted(selected, key=attrgetter("name"))
 
 
 @cloup.group(formatter_settings=HelpFormatter.settings(theme=HelpTheme.light(), max_width=85))
@@ -180,10 +201,13 @@ def main(ctx: click.Context) -> None:
         help="The area of concern to benchmark.  [default: format]",
     ),
     click.option(
+        "-t",
         "--targets",
-        default="all",
+        default=["all"],
         show_default=True,
+        multiple=True,
         type=TargetSpecifierType(),
+        callback=targets_callback,
         help=(
             "The code files to use as the task's input."
             " Normal targets are real-world code files and therefore lead to data that"
@@ -220,7 +244,7 @@ def cmd_run(
     dump_path: Path,
     pyperf_args: Tuple[str, ...],
     task: Task,
-    targets: str,
+    targets: List[Target],
     fast: bool,
     format_config: str,
 ) -> None:
@@ -253,12 +277,7 @@ def cmd_run(
         )
     log(f"Will dump results to `{pretty_dump_path}`.")
 
-    selected_targets: List[Target] = []
-    if targets.casefold() in ("micro", "all"):
-        selected_targets.extend(resources.micro_targets)
-    if targets.casefold() in ("normal", "all"):
-        selected_targets.extend(resources.normal_targets)
-    benchmarks = [Benchmark(task, target) for target in selected_targets]
+    benchmarks = [Benchmark(task, target) for target in targets]
 
     prepped_pyperf_args = list(pyperf_args)
     if fast and "--fast" not in pyperf_args:

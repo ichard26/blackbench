@@ -37,7 +37,7 @@ You can enable tab completion following these instructions:
   Add this to ``~/.bashrc``:
 
   ```bash
-  eval "$(_BLACKBENCH_COMPLETE=bash_source BLACKBENCH)"
+  eval "$(_BLACKBENCH_COMPLETE=bash_source blackbench)"
   ```
   ````
 
@@ -45,15 +45,15 @@ You can enable tab completion following these instructions:
   Add this to ``~/.zshrc``:
 
   ```zsh
-  eval "$(_FOO_BAR_COMPLETE=zsh_source foo-bar)"
+  eval "$(_BLACKBENCH_COMPLETE=zsh_source blackbench)"
   ```
   ````
 
   ````{tab} Fish
-  Add this to ``~/.config/fish/completions/foo-bar.fish``:
+  Add this to ``~/.config/fish/completions/blackbench.fish``:
 
   ```fish
-  eval (env _FOO_BAR_COMPLETE=fish_source foo-bar)
+  eval (env _BLACKBENCH_COMPLETE=fish_source blackbench)
   ```
 
   ````

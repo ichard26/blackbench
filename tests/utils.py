@@ -1,21 +1,19 @@
 import subprocess
 import sys
 from contextlib import contextmanager
-from functools import wraps
 from pathlib import Path
 from typing import Any, Callable, Final, Generator, Iterator, List, Optional, Tuple
 from unittest.mock import Mock, patch
 
 import pyperf
-import pytest
 
-from blackbench import FormatTask, Target, Task
+import blackbench
+from blackbench import Benchmark, FormatTask, Target, Task
 
-NO_BLACK = False
 try:
     import black  # noqa: F401
-except ImportError:  # pragma: no cover
-    NO_BLACK = True
+except ImportError as err:  # pragma: no cover
+    raise RuntimeError("Can't import Black, stopping as many tests need it.") from err
 
 WINDOWS = sys.platform.startswith("win")
 DIR_SEP = "\\" if WINDOWS else "/"
@@ -50,13 +48,22 @@ _original_run: Final = subprocess.run
 
 @contextmanager
 def replace_resources() -> Generator[None, None, None]:
-    task_patcher = patch("blackbench.resources.tasks", TEST_TASKS)
+    with replace_targets():
+        task_patcher = patch("blackbench.resources.tasks", TEST_TASKS)
+        task_patcher.start()
+        try:
+            yield
+        finally:
+            task_patcher.stop()
+
+
+@contextmanager
+def replace_targets() -> Iterator:
     normal_dir_patcher = patch("blackbench.resources.NORMAL_DIR", TEST_NORMAL_PATH)
     micro_dir_patcher = patch("blackbench.resources.MICRO_DIR", TEST_MICRO_PATH)
     targets_patcher = patch("blackbench.resources.targets", TEST_TARGETS)
     normal_targets_patcher = patch("blackbench.resources.normal_targets", TEST_NORMAL_TARGETS)
     micro_targets_patcher = patch("blackbench.resources.micro_targets", TEST_MICRO_TARGETS)
-    task_patcher.start()
     normal_dir_patcher.start()
     micro_dir_patcher.start()
     targets_patcher.start()
@@ -65,7 +72,6 @@ def replace_resources() -> Generator[None, None, None]:
     try:
         yield
     finally:
-        task_patcher.stop()
         normal_dir_patcher.stop()
         micro_dir_patcher.stop()
         targets_patcher.stop()
@@ -108,10 +114,11 @@ def get_subprocess_run_commands(mock: Mock) -> List[List[str]]:
     return [call_args[0][0] for call_args in mock.call_args_list]
 
 
-def needs_black(func: Callable) -> Callable:
-    @wraps(func)
-    @pytest.mark.skipif(NO_BLACK, reason="can't import black")
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        return func(*args, **kwargs)
-
-    return wrapper  # type: ignore
+@contextmanager
+def log_benchmarks(*, mock: bool = False) -> Generator[List[Benchmark], None, None]:
+    passed: List[Benchmark] = []
+    wraps = lambda *args: (None, False) if mock else blackbench.run_suite  # noqa: E731
+    with patch("blackbench.run_suite", wraps=wraps) as mock:
+        yield passed
+    assert not mock.call_count or mock.call_count == 1, "only one call of run_suite is supported"
+    passed.extend(mock.call_args_list[0][0][0])

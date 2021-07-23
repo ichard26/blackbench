@@ -18,6 +18,8 @@ Date of release: *unreleased*
   by such arguments. Useful for debugging stability or slowness issues.
 - The command line interface UX has been improved by 1) much prettier help outputs
   thanks to {pypi}`cloup`, and 2) official autocompletion support.
+- The `--targets` (or now `-t`!) option can now also specify a specific target. You can
+  also now repeat the option to additively choose your own custom collection of targets.
 
 **Project**:
 

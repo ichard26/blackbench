@@ -10,28 +10,17 @@ import pytest
 import blackbench
 from blackbench import Benchmark, Target, resources
 
-from .utils import PAINT_TASK, fast_run, needs_black
+from .utils import PAINT_TASK, fast_run, replace_targets
 
 
 @pytest.mark.parametrize("task", resources.tasks.keys())
-@needs_black
 def test_provided_tasks(task: str, tmp_path: Path, tmp_result: Path, run_cmd):
-    # All of this complexity is to speed up the test up by avoiding unnecessary targets.
-    tiny = tmp_path / "super-tiny.py"
-    tiny.write_text("a = 1 + 2 + 3", "utf8")
-    tiny_target = Target(tiny, micro=True, description="")
-    cmd = ["run", str(tmp_result), "--task", task, "--targets", "micro"]
+    cmd = ["run", str(tmp_result), "--task", task, "-t", "tiny.py"]
     if task.startswith("format"):
         cmd.extend(["--format-config", "is_pyi=True"])
 
-    # fmt: off
-    with \
-        patch("subprocess.run", fast_run), \
-        patch("blackbench.resources.MICRO_DIR", tmp_path), \
-        patch("blackbench.resources.micro_targets", [tiny_target]) \
-    :
+    with patch("subprocess.run", fast_run), replace_targets():
         result = run_cmd(cmd)
-    # fmt: on
 
     assert not result.exit_code
     assert "ERROR" not in result.output and "WARNING" not in result.output
