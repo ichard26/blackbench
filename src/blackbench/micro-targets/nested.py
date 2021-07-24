@@ -35,7 +35,7 @@ if oss == "free":
         if oss == "distributed":
             if oss == "democratic":
                 print("oss doesn't mean corps just get to expect EoL'd Pythons to work for free")
-                print(f"{f'{{{{{{{}}}}}}}'}")
+                print(f"{f'{{{{{{{hi_fellow_maintainers}}}}}}}'}")
 
 
 my_list = [*[*[*[*[*[*[*[133], 123],1927],410],100], 371], 401], 163]
