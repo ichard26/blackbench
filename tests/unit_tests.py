@@ -121,3 +121,15 @@ def test_target_name(micro: bool, tpath: Path) -> None:
     with replace_resources():
         t = blackbench.Target(tpath / "ello.py", micro=micro, description="")
         assert t.name == "ello"
+
+
+def test_target_name_has_no_backslashes() -> None:
+    """
+    Backslashes are 1) inconsistent, and 2) leads to crashes on Windows due to escapes :/
+
+    Fun fact: this is the first regression test ... which of course is about *backslashes* being
+              a pain :P
+    """
+    target = blackbench.resources.normal_targets[0]
+    assert target.name.count("/") == 1
+    assert not target.name.count("\\")
