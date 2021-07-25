@@ -288,11 +288,13 @@ def cmd_run(
             f" for the `{task.name}` task."
         )
 
-    pretty_dump_path = str(dump_path.relative_to(os.getcwd()))
     if dump_path.exists():
+        try:
+            pretty_dump_path = dump_path.relative_to(os.getcwd())
+        except ValueError:
+            pretty_dump_path = dump_path
         warn(f"A file / directory already exists at `{pretty_dump_path}`.")
         click.confirm("[*] Do you want to overwrite and continue?", abort=True)
-    log(f"Will dump results to `{pretty_dump_path}`.")
 
     benchmarks = [Benchmark(task, target) for target in targets]
 
