@@ -156,6 +156,17 @@ def targets_callback(
     return sorted(selected, key=attrgetter("name"))
 
 
+class ResourceType(click.ParamType):
+    """Really basic type that only provides shell completion."""
+
+    def shell_complete(
+        self, ctx: click.Context, param: click.Parameter, incomplete: str
+    ) -> List[CompletionItem]:  # pragma: no cover
+        items = [CompletionItem(t.name, help=t.description) for t in resources.targets.values()]
+        items.extend(CompletionItem(t.name, help=t.description) for t in resources.tasks.values())
+        return items
+
+
 @cloup.group(formatter_settings=HelpFormatter.settings(theme=HelpTheme.light(), max_width=85))
 @click.version_option(
     __version__, package_name=__file__, message="%(prog)s %(version)s, from %(package)s"
@@ -333,7 +344,7 @@ def cmd_info(ctx: click.Context) -> None:
 
 
 @main.command("dump")
-@click.argument("dump-target", metavar="ID")
+@click.argument("dump-target", metavar="resource-name", type=ResourceType())
 @click.pass_context
 def cmd_dump(ctx: click.Context, dump_target: str) -> None:
     """Dump the source for a task or target."""
