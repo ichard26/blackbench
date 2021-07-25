@@ -306,9 +306,12 @@ def cmd_run(
 
     if suite_results:
         suite_results.dump(str(dump_path), replace=True)
-        log("Results dumped.")
+        if not errored:
+            log("Results dumped.")
+        else:
+            warn("Results dumped (at least one benchmark is missing due to failure).")
     else:
-        log("No results were collected.")
+        err("No results were collected.")
 
     end_time = time.perf_counter()
     log(f"Blackbench run finished in {end_time - start_time:.3f} seconds.", fg="green", bold=True)

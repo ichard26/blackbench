@@ -1,17 +1,22 @@
 # mypy: disallow_untyped_defs=False
 # mypy: disallow_incomplete_defs=False
 
+# NOTE: I know that there's actually a mix of integration and functional
+# tests in here but I don't need one more test file right now.
+
 from pathlib import Path
 from typing import List, Set
 from unittest.mock import patch
 
 import pytest
 
+import blackbench
 from blackbench import Target
 
 from .utils import (
     DATA_DIR,
     PAINT_TASK,
+    TEST_MICRO_PATH,
     TEST_MICRO_TARGETS,
     TEST_NORMAL_TARGETS,
     bm_run_mock_helper,
@@ -129,10 +134,8 @@ def test_run_cmd_with_fast(tmp_result: Path, run_cmd):
 @pytest.mark.parametrize("group", ["micro", "normal"])
 def test_run_cmd_with_nonall_group(tmp_result: Path, run_cmd, group: str):
     with replace_resources(), log_benchmarks(mock=True) as logged:
-        result = run_cmd(["run", str(tmp_result), "--targets", group])
+        run_cmd(["run", str(tmp_result), "--targets", group])
 
-    assert not result.exit_code
-    assert "ERROR" not in result.output and "WARNING" not in result.output
     if group == "normal":
         assert all(not bm.target.micro for bm in logged)
     else:
@@ -149,9 +152,7 @@ def test_run_cmd_with_nonall_group(tmp_result: Path, run_cmd, group: str):
 def test_run_cmd_targets_opt(run_cmd, tmp_result: Path, values: List[str], expected: Set[str]):
     with replace_resources():
         with log_benchmarks(mock=True) as logged:
-            result = run_cmd(["run", str(tmp_result), *[f"-t{v}" for v in values]])
-        assert not result.exit_code
-        assert "ERROR" not in result.output and "WARNING" not in result.output
+            run_cmd(["run", str(tmp_result), *[f"-t{v}" for v in values]])
         assert {bm.target.name for bm in logged} == expected
 
 
@@ -179,17 +180,18 @@ def test_run_cmd_with_format_config(tmp_result: Path, run_cmd):
 
 
 def test_run_cmd_with_invalid_target(tmp_result: Path, run_cmd):
-    invalid_target = Target(DATA_DIR / "invalid-target.py", micro=True)
+    invalid_target = Target(TEST_MICRO_PATH / "invalid-target.py", micro=True)
     # fmt: off
     with \
-        patch("blackbench.resources.MICRO_DIR", DATA_DIR), \
+        patch("blackbench.resources.MICRO_DIR", TEST_MICRO_PATH), \
         patch("blackbench.resources.micro_targets", [invalid_target]) \
     :
         result = run_cmd(["run", str(tmp_result), "--targets", "micro"])
     # fmt: on
 
     assert result.exit_code == 1
-    assert result.output.count("ERROR") == 1 and "WARNING" not in result.output
+    # There's also an error if there's no results to dump.
+    assert result.output.count("ERROR") == 2 and "WARNING" not in result.output
 
 
 def test_run_cmd_with_preexisting_file(tmp_result: Path, run_cmd):
@@ -237,3 +239,17 @@ def test_run_cmd_with_pyperf_args(tmp_result: Path, run_cmd):
     assert "ERROR" not in result.output and "WARNING" not in result.output
     good_result = (DATA_DIR / "micro-tiny.json").read_text("utf8")
     assert tmp_result.read_text("utf8") == good_result
+
+
+def test_run_cmd_with_partial_failure(run_cmd, tmp_result: Path) -> None:
+    invalid_target = Target(TEST_MICRO_PATH / "invalid-target.py", micro=True)
+    with replace_resources(), patch("subprocess.run", fast_run):
+        blackbench.resources.targets["invalid-target"] = invalid_target
+        blackbench.resources.micro_targets.append(invalid_target)
+        result = run_cmd(["run", str(tmp_result), "-t", "tiny", "-t", "invalid-target"])
+
+    assert "ERROR: Failed to run benchmark" in result.output
+    assert (
+        "WARNING: Results dumped (at least one benchmark is missing due to failure)"
+        in result.output
+    )
