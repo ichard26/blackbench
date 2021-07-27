@@ -146,9 +146,8 @@ less values.
 
 See the rest of the User Guide for an indepth explanation and guide to using blackbench
 effectively, to learn blackbench's more advanced features, and overall get better at
-benchmarking effectively. You can also take a look at the
-[pyperf documentation][pyperf-docs] since blackbench heavily depends on it for many
-parts of its functionality.
+benchmarking. You can also take a look at the [pyperf documentation][pyperf-docs] since
+blackbench heavily depends on it for many parts of its functionality.
 
 Thank you for using blackbench and I hope you make good use out of it!
 
