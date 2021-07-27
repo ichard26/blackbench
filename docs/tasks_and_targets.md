@@ -14,7 +14,9 @@ was possible, they would be annoying to maintain.
 
 Benchmarks ran by blackbench are named using the task and target they are based off. For
 example a benchmark using the `parse` task and the `strings-list` target would be named
-`parse-strings-list`.
+`parse-strings-list`. Oh and benchmarks based off micro targets are called also
+microbenchmarks (since the goal of checking the performance of a specific area
+transfers).
 
 Below are details about the tasks and targets that ship with blackbench:
 
