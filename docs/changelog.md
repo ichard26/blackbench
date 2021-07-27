@@ -1,8 +1,8 @@
 # Changelog
 
-## 21.6.dev2
+## 21.7.dev2
 
-Date of release: *unreleased*
+Date of release: July 27th, 2021
 
 **Bugfixes & enhancements**:
 
@@ -40,7 +40,7 @@ Date of release: *unreleased*
 
 ## 21.6.dev1
 
-Date of release: 14 June, 2021
+Date of release: June 14th, 2021
 
 Initial development version of blackbench. Unsurprisingly it is functional but extremely
 limited. Windows support is actually straight up broken due to a bug :P
