@@ -278,7 +278,7 @@ def cmd_run(
 
     log(
         f"Versions: blackbench: {__version__}, pyperf: {pyperf.__version__}"
-        f" black: {black.__version__}",
+        f", black: {black.__version__}",
         fg="cyan",
     )
 

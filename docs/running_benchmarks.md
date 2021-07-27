@@ -1,39 +1,41 @@
 # Running benchmarks
 
-```{important}
 **Pre-requisite:** an installation of Black that's importable in the current environment
-(please make sure the task you're using [supports your installed version of Black](labels/task-compatibility)).
-```
+(please make sure the task you're using
+[supports your installed version of Black](labels/task-compatibility)).
 
-Running benchmarks is as simple as calling the run command and providing a filepath to
-dump results to:
+The simplest way of running benchmarks is to call the run command providing a filepath
+to dump results to:
 
 ```console
-ichard26@acer-ubuntu:~/programming/oss/blackbench$ blackbench run example.json
-[*] Will dump results to `example.json`.
-[*] Created temporary workdir at `/tmp/blackbench-workdir-hw781x4m`.
-[*] Running `fmt-strings-list` benchmark (1/1)
+dev@example:~/blackbench$ blackbench run example.json
+[*] Versions: blackbench: 21.7.dev2, pyperf: 2.2.0, black: 21.7b0
+[*] Created temporary workdir at `/tmp/blackbench-workdir-67vki43p`.
+[*] Alright, let's start!
+[*] Running `fmt-black/__init__` benchmark (1/17)
 .....................
 WARNING: the benchmark result may be unstable
-* the maximum (75.8 ms) is 50% greater than the mean (50.6 ms)
+* the standard deviation (546 ms) is 30% of the mean (1.84 sec)
+* the maximum (4.64 sec) is 153% greater than the mean (1.84 sec)
 
 Try to rerun the benchmark with more runs, values and/or loops.
 Run 'python -m pyperf system tune' command to reduce the system jitter.
 Use pyperf stats, pyperf dump and pyperf hist to analyze results.
 Use --quiet option to hide these warnings.
 
-fmt-strings-list: Mean +- std dev: 50.6 ms +- 4.1 ms
-[*] Took 29.607 seconds.
+fmt-black/__init__: Mean +- std dev: 1.84 sec +- 0.55 sec
+[*] Took 166.059 seconds.
+
+[snipped ...]
+
 [*] Cleaning up.
 [*] Results dumped.
-[*] Blackbench run finished in 29.851 seconds.
+[*] Blackbench run finished in 818.794 seconds.
 ```
 
 **Note how there's a "WARNING: the benchmark result may be unstable" line in the
 output.** This leads perfectly into the next topic when running benchmarks: stability
 and reliability.
-
-(labels/benchmark-stability)=
 
 ## Benchmark stability
 
@@ -55,6 +57,57 @@ to increase benchmark stability.
 Note the suggested modifications may not be supported for
 your specific environment and also can be annoying to undo (a simple reboot should clear them though).
 ```
+
+Some concrete advice is to 1) use pyperf's great system tuning features. Not only does
+it have the automagicial `pyperf system tune` command, there's the lovely
+`pyperf system show` command which emits revelant system information and even some
+advice to further tweak your system! 2) Even if you can't isolate a CPU core, always use
+CPU pinning via pyperf's `--affinity`. This avoids the noise caused by the worker
+process being constantly assigned and reassigned to different CPU cores over time. 3) If
+you feel like it, try learning pyperf's benchmark parameters and see what works well for
+you (eg. maybe two warmups is better than one for you!).
+
+If you're curious what I, Richard aka @ichard26, do to tune my system in preparation,
+here's a summary:
+
+<details>
+
+<summary>Personal tuning steps</summary>
+
+System notes: it's a dual-core running Ubuntu 20.04 LTS :P
+
+- Reboot
+
+- At the boot menu, add the following Linux kernel parameters: `isolcpus=1`,
+  `nohz_full=1`, and `rcu_nocbs=1`
+
+- Once booted, run `pyperf system tune`
+
+- Then run `my-custom-script.bash`:
+
+  ```bash
+  # This has to be run under a root shell
+  echo userspace > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+  echo userspace > /sys/devices/system/cpu/cpu1/cpufreq/scaling_governor
+  echo 2100000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed
+  echo 2100000 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_setspeed
+  echo 2100000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+  echo 2100000 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq
+  echo 2100000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+  echo 2100000 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_max_freq
+  echo 1 > /proc/sys/kernel/perf_event_max_sample_rate
+  echo "System tuned :D"
+  ```
+
+  This exists because my laptop's cooling capacity isn't good enough to handle the
+  `performance` scaling governor that `pyperf system tune` sets. Eventually the CPU
+  frequency would gradually go down, killing any hope at reliable results. So instead I
+  lock the CPU frequency at 2.1 GHz. There's also a perf event config but that's less
+  cool :)
+
+- Run `pyperf system show` to verify I haven't missed anything dumb
+
+</details>
 
 ## Task & target selection
 
@@ -80,8 +133,8 @@ accuracy it also does increase total benchmark duration.
 
 You can pass `--fast` (which is actually an alias for `-- --fast`) to ask pyperf to
 collect less values for faster result turnaround at the price of result quality.
-Although with a well tuned system, the reduction in benchmarking time far usually
-outstrips the drop in result quality.
+Although with a well tuned system, the reduction in benchmarking time is well worth the
+(not too bad) drop in result quality.
 
 ## pyperf configuration
 
@@ -122,7 +175,7 @@ something like this:
 ---
 emphasize-lines: 7
 ---
-# In reality, there's a lot of extra supporting code, but it's irrelevant here.
+# In reality, there's some more supporting code, but it's irrelevant here.
 
 import black
 

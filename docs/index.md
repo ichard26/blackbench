@@ -69,9 +69,50 @@ directly with its excellent analysis features.
 
 ```
 
+## Example run
+
+```console
+dev@example:~/blackbench$ blackbench run mypyc-opt1.json --fast --task parse --targets micro -- --affinity 1
+[*] Versions: blackbench: 21.7.dev2, pyperf: 2.2.0, black: 21.7b0
+[*] Created temporary workdir at `/tmp/blackbench-workdir-c5hoese9`.
+[*] Alright, let's start!
+[*] Running `parse-comments` microbenchmark (1/5)
+...........
+parse-comments: Mean +- std dev: 34.1 ms +- 1.0 ms
+[*] Took 9.876 seconds.
+[*] Running `parse-dict-literal` microbenchmark (2/5)
+...........
+parse-dict-literal: Mean +- std dev: 37.7 ms +- 2.4 ms
+[*] Took 10.548 seconds.
+[*] Running `parse-list-literal` microbenchmark (3/5)
+...........
+parse-list-literal: Mean +- std dev: 21.8 ms +- 2.4 ms
+[*] Took 11.154 seconds.
+[*] Running `parse-nested` microbenchmark (4/5)
+...........
+parse-nested: Mean +- std dev: 20.5 ms +- 1.2 ms
+[*] Took 10.79 seconds.
+[*] Running `parse-strings-list` microbenchmark (5/5)
+...........
+parse-strings-list: Mean +- std dev: 5.71 ms +- 1.09 ms
+[*] Took 11.588 seconds.
+[*] Cleaning up.
+[*] Results dumped.
+[*] Blackbench run finished in 54.139 seconds.
+```
+
+A breakdown of what's happening here:
+
+- `mypyc-opt1.json`: the filepath to save the results
+- `--task parse`: the timing workload is initial blib2to3 parsing
+- `--targets micro`: only run microbenchmarks (that perform the selected task)
+- `--fast`: collect less values so results are ready sooner
+- everything after `--`: arguments passed to the underlying pyperf process
+
 ## License
 
 Blackbench: MIT.
 
 Targets based off real code maintain their original license. Please check the directory
-containing the target in question for a license file.
+containing the target in question for a license file. There's also one task based off
+Black's code. Please also check the task templates directory for more information.

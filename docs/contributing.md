@@ -192,33 +192,6 @@ $ nox -s docs-live
 Once the first build has been completed, there should be a link that serves the built
 documentation. As mentioned, the page will automagically refresh on changes!
 
-## Area-specific notes
-
-### Adding a new target
-
-At the moment of writing blackbench doesn't come with much benchmark data to run Black
-against. So I'd appreciate more code files to throw to Black.
-
-I'm looking for two kinds of targets: "normal" and "micro" . Normal targets should
-represent real-world code (so the benchmarking data actually represents real-world
-performance). Micro targets should be small and are focused on one area of Black
-formatting (and mostly exist to measure performance in a specific area, like string
-processing).
-
-In terms of guidelines: normal targets shouldn't be bigger than ~2000 lines (this is to
-keep time requirements to run the benchmark based off the target manageable), and micro
-targets shouldn't be bigger than ~400 lines. Oh and for micro targets, make sure their
-focus hasn't been already covered by another target.
-
-### Release process
-
-```{todo}
-Need to actually write up a release process, but that will wait until blackbench hits
-beta or alpha.
-
-note-to-self: don't forget about the `build` session
-```
-
 ## PR guidelines
 
 To make it easier for all of us to collaborate and get your PR merged, there's a few
@@ -240,6 +213,32 @@ guidelines to be noted:
 If you get stuck, don't hesistate to ask for help on the relevant issue or PR.
 Alternatively, we can talk in the #black-formatter[^1] text channel on Python Discord.
 Here's an [invite link][discord]!
+
+______________________________________________________________________
+
+## Appendix A: area-specific notes
+
+### Adding a new target
+
+I'm looking for two kinds of targets: "normal" and "micro" . Normal targets should
+represent real-world code (so the benchmarking data actually represents real-world
+performance). Micro targets should be small and are focused on one area of Black
+formatting (and mostly exist to measure performance in a specific area, like string
+processing).
+
+In terms of guidelines: normal targets shouldn't be bigger than ~2000 lines (this is to
+keep time requirements to run the benchmark based off the target manageable), and micro
+targets shouldn't be bigger than ~400 lines. Oh and for micro targets, make sure their
+focus hasn't been already covered by another target.
+
+### Release process
+
+```{todo}
+Need to actually write up a release process, but that will wait until blackbench hits
+beta or alpha.
+
+See also <https://github.com/ichard26/blackbench/issues/7>.
+```
 
 [^1]: I know it's specifically for Black, but blackbench is a development tool for Black so I
     consider it acceptable - although I never asked ... but then again, I am a maintainer of

@@ -2,7 +2,8 @@
 
 Blackbench comes with tasks and targets. Tasks represent a specific task Black has do
 during formatting, and come with a specific template. Targets are the actual files Black
-is run against to gauge performance. Together they create benchmarks that are ran using
+(or more specifically the task's template / code which calls the relevant Black APIs) is
+run against to gauge performance. Together they create benchmarks that are ran using
 [pyperf](https://pypi.org/project/pyperf).
 
 Why not just ship ready-to-go benchmark scripts instead? Well, there's a few issues with
