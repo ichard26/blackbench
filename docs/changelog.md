@@ -1,5 +1,13 @@
 # Changelog
 
+## 21.7a1
+
+Date of release: *n/a*
+
+**Bugfixes & enhancements**:
+
+- Fixed the pyperf requirement which was originally pinning pyperf to 2.0.0 by accident.
+
 ## 21.7.dev2
 
 Date of release: July 27th, 2021
