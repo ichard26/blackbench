@@ -58,5 +58,3 @@ highlight_language = "none"
 html_theme = "furo"
 html_title = f"Blackbench {release}"
 html_favicon = "static/ichard26-favicon.png"
-html_static_path = ["static"]
-html_css_files = ["custom.css"]
