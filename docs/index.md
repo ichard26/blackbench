@@ -114,5 +114,4 @@ A breakdown of what's happening here:
 Blackbench: MIT.
 
 Targets based off real code maintain their original license. Please check the directory
-containing the target in question for a license file. There's also one task based off
-Black's code. Please also check the task templates directory for more information.
+containing the target in question for a license file.

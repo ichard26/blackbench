@@ -35,7 +35,7 @@ def test_provided_targets(tmp_result: Path, run_cmd, target: Target):
     # because their external usages makes maintenance harder :/
     code = target.path.read_text("utf8")
     try:
-        black.format_file_contents(code, fast=False, mode=black.Mode())
+        black.format_file_contents(code, fast=False, mode=black.FileMode())
     except black.NothingChanged:
         pass
 

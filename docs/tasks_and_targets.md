@@ -67,8 +67,7 @@ implementation. This provides a benchmarking speedup and is also unavoidable for
 level tasks like `parse`. Due to this, each task imposes restrictions to what version of
 Black their benchmarks can be run under:
 
-- `fmt` and `fmt-fast`: >= 19.3b0
-- `parse`: >= 21.5b1
+- `fmt`, `fmt-fast`, and `parse`: >= 19.3b0
 
 ## Useful commands
 
