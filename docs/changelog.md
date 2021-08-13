@@ -7,6 +7,8 @@ Date of release: *n/a*
 **Bugfixes & enhancements**:
 
 - Fixed the pyperf requirement which was originally pinning pyperf to 2.0.0 by accident.
+- Added pre-checks for both pyperf arguments and --format-config configuration so issues
+  are caught earlier.
 
 ## 21.7.dev2
 

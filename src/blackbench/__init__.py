@@ -2,11 +2,12 @@
 A benchmarking suite for Black, the Python code formatter.
 """
 
-__version__ = "21.7.dev2"
+__version__ = "21.7+dev3"
 
 import os
 import subprocess
 import sys
+import textwrap
 import time
 from dataclasses import replace
 from operator import attrgetter
@@ -71,6 +72,39 @@ def run_suite(
             return pyperf.BenchmarkSuite(results), errored
         else:
             return None, True
+
+
+# ================= #
+# Config validation #
+# ================= #
+
+
+def check_pyperf_args(args: Sequence[str]) -> None:
+    benchmark = Path(THIS_DIR, "misc", "dummy-benchmark.py")
+    try:
+        # fmt: off
+        subprocess.run(
+            [sys.executable, str(benchmark), "--processes", "1", "--loops", "1", *args],
+            check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8"
+        )
+        # fmt: on
+    except subprocess.CalledProcessError as e:
+        err(f"Invalid pyperf arguments: {' '.join(args)}")
+        pretty = textwrap.indent(e.stdout.strip(), " " * 4)
+        click.secho(pretty)
+        sys.exit(2)
+
+
+def check_mode_config(config: str) -> None:
+    import black
+
+    try:
+        eval(f"black.FileMode({config})", {"black": black})
+    except Exception as e:
+        err(f"Invalid black.Mode configuration: {config}")
+        pretty = textwrap.indent(f"{e.__class__.__name__}: {e}", " " * 4)
+        click.secho(pretty)
+        sys.exit(2)
 
 
 # ============================ #
@@ -272,8 +306,8 @@ def cmd_run(
 
     try:
         import black
-    except ImportError:
-        err("Black isn't importable in the current environment.")
+    except ImportError as e:
+        err(f"Black isn't importable in the current environment: {e}")
         ctx.exit(1)
 
     log(
@@ -287,6 +321,9 @@ def cmd_run(
             "Ignoring `--format-config` option since it doesn't make sense"
             f" for the `{task.name}` task."
         )
+    check_pyperf_args(pyperf_args)
+    check_mode_config(format_config)
+    log("Checked configuration and everything's all good!")
 
     if dump_path.exists():
         try:

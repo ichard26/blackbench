@@ -90,10 +90,16 @@ def replace_targets() -> Iterator:
 
 
 def bm_run_mock_helper(mock_results: List[Path]) -> Callable:
+    to_skip = 1
     return_index = 0
 
     def mock(cmd: List[str], *args: Any, **kwargs: Any) -> None:
-        nonlocal return_index
+        nonlocal to_skip, return_index
+        if to_skip:
+            # Skip the configuration validation related subprocess calls.
+            to_skip -= 1
+            return
+
         assert "--output" in cmd
         dump_path_index = cmd.index("--output") + 1
         dump_path = Path(cmd[dump_path_index])
@@ -121,7 +127,7 @@ def fast_run(cmd: List[str], *args: Any, **kwargs: Any) -> subprocess.CompletedP
 
 
 def get_subprocess_run_commands(mock: Mock) -> List[List[str]]:
-    return [call_args[0][0] for call_args in mock.call_args_list]
+    return [call_args[0][0] for call_args in mock.call_args_list[1:]]
 
 
 @contextmanager

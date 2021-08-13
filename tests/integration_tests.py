@@ -87,7 +87,7 @@ def test_run_cmd(tmp_result: Path, run_cmd):
     commands = get_subprocess_run_commands(sub_run)
 
     assert not result.exit_code
-    assert sub_run.call_count == 4
+    assert sub_run.call_count == 5
     for cmd in commands:
         assert len(cmd) == 4
         assert "--fast" not in cmd
@@ -95,15 +95,16 @@ def test_run_cmd(tmp_result: Path, run_cmd):
     assert tmp_result.read_text("utf8") == good_result
 
     output_lines = result.output.splitlines()
-    assert len(output_lines) == 14
+    assert len(output_lines) == 15
     assert "ERROR" not in result.output and "WARNING" not in result.output
     assert output_lines[0].startswith("[*] Versions: blackbench: ")
-    assert output_lines[1].startswith("[*] Created temporary workdir at `")
-    assert output_lines[2] == "[*] Alright, let's start!"
-    assert output_lines[3] == "[*] Running `fmt-goodbye-internet` benchmark (1/4)"
-    assert output_lines[5] == "[*] Running `fmt-hello-world` benchmark (2/4)"
-    assert output_lines[7] == "[*] Running `fmt-i/heard/you/like/nested` benchmark (3/4)"
-    assert output_lines[9] == "[*] Running `fmt-tiny` microbenchmark (4/4)"
+    assert output_lines[1] == "[*] Checked configuration and everything's all good!"
+    assert output_lines[2].startswith("[*] Created temporary workdir at `")
+    assert output_lines[3] == "[*] Alright, let's start!"
+    assert output_lines[4] == "[*] Running `fmt-goodbye-internet` benchmark (1/4)"
+    assert output_lines[6] == "[*] Running `fmt-hello-world` benchmark (2/4)"
+    assert output_lines[8] == "[*] Running `fmt-i/heard/you/like/nested` benchmark (3/4)"
+    assert output_lines[10] == "[*] Running `fmt-tiny` microbenchmark (4/4)"
     assert output_lines[-3] == "[*] Cleaning up."
     assert output_lines[-2] == "[*] Results dumped."
     assert output_lines[-1].startswith("[*] Blackbench run finished in")
@@ -124,7 +125,7 @@ def test_run_cmd_with_fast(tmp_result: Path, run_cmd):
 
     assert not result.exit_code
     assert "ERROR" not in result.output and "WARNING" not in result.output
-    assert sub_run.call_count == 4
+    assert sub_run.call_count == 5
     for cmd in commands:
         assert len(cmd) == 5
         assert "--fast" in cmd
@@ -176,6 +177,12 @@ def test_run_cmd_with_format_config(tmp_result: Path, run_cmd):
     assert "ERROR" not in result.output and "WARNING" not in result.output
     good_result = (DATA_DIR / "micro-tiny.json").read_text("utf8")
     assert tmp_result.read_text("utf8") == good_result
+
+
+def test_run_cmd_with_broken_format_config(tmp_result: Path, run_cmd) -> None:
+    result = run_cmd(["run", tmp_result, "--format-config", "ça va bien?"])
+    assert result.exit_code == 2
+    assert "Invalid black.Mode configuration: ça va bien?" in result.output
 
 
 def test_run_cmd_with_invalid_target(tmp_result: Path, run_cmd):
@@ -238,6 +245,13 @@ def test_run_cmd_with_pyperf_args(tmp_result: Path, run_cmd):
     assert "ERROR" not in result.output and "WARNING" not in result.output
     good_result = (DATA_DIR / "micro-tiny.json").read_text("utf8")
     assert tmp_result.read_text("utf8") == good_result
+
+
+def test_run_cmd_with_broken_pyperf_args(tmp_result: Path, run_cmd) -> None:
+    result = run_cmd(["run", str(tmp_result), "--", "-no"])
+    assert result.exit_code == 2
+    assert "Checked configuration and everything's all good!" not in result.output
+    assert "ERROR: Invalid pyperf arguments:" in result.output
 
 
 def test_run_cmd_with_partial_failure(run_cmd, tmp_result: Path) -> None:
