@@ -93,6 +93,7 @@ def test_task_create_benchmark(task_name: str) -> None:
             mode="is_pyi=True",
         )
     assert bm.code == good_code
+    assert bm.description == f"{task.description} + "
 
 
 def test_managed_workdir(tmp_path, capsys):

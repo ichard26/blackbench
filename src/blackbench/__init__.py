@@ -9,7 +9,7 @@ import subprocess
 import sys
 import textwrap
 import time
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from operator import attrgetter
 from pathlib import Path
 from typing import List, Optional, Sequence, Tuple, Union
@@ -32,18 +32,22 @@ THIS_DIR = Path(__file__).parent
 # ============ #
 
 
+@dataclass(init=False)
 class Benchmark:
     def __init__(self, task: Task, target: Target) -> None:
         self.name = f"{task.name}-{target.name}"
         self.code = task.create_benchmark_script(self.name, target)
         self.micro = target.micro
-        self.target = target
+        self.description = f"{task.description} + {target.description}"
         self.task = task
+        self.target = target
 
 
 def run_suite(
     benchmarks: List[Benchmark], pyperf_args: Sequence[str], workdir: Path
 ) -> Tuple[Optional[pyperf.BenchmarkSuite], bool]:
+    import black
+
     results: List[pyperf.Benchmark] = []
     errored = False
     for i, bm in enumerate(benchmarks, start=1):
@@ -66,6 +70,13 @@ def run_suite(
             log(f"Took {round(t1 - t0, 3)} seconds.", bold=True)
 
             result = pyperf.Benchmark.loads(result_file.read_text(encoding="utf8"))
+            # fmt: off
+            result.update_metadata({
+                "description": bm.description,
+                "blackbench-version": __version__,
+                "black-version": black.__version__
+            })
+            # fmt: on
             results.append(result)
     else:
         if results:
@@ -211,7 +222,7 @@ def main(ctx: click.Context) -> None:
     A benchmarking suite for Black, the Python code formatter.
 
     Now this isn't your typical collection of benchmarks. Blackbench is really a
-    collection of targets and task templates. Benchmarks are generated on the fly
+    collection of targets and task templates. Benchmarks are set up on the fly
     using the task's template as the base and the targets as the profiling data.
     Blackbench comes with pre-curated tasks and targets, allowing for easy and complete
     benchmarking of Black and equally easy performance comparisons.

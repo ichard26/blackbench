@@ -4,14 +4,18 @@
 # NOTE: I know that there's actually a mix of integration and functional
 # tests in here but I don't need one more test file right now.
 
+import json
+from io import StringIO
 from pathlib import Path
 from typing import List, Set
 from unittest.mock import patch
 
+import black
+import pyperf
 import pytest
 
 import blackbench
-from blackbench import Target
+from blackbench import Target, __version__
 
 from .utils import (
     DATA_DIR,
@@ -25,6 +29,31 @@ from .utils import (
     log_benchmarks,
     replace_resources,
 )
+
+
+def compare_json_data(good_name: str, actual_path: Path) -> None:
+    """
+    Basically just one massive annoying hack to avoid issues with non-static
+    metadata being injected into the JSON files.
+    """
+    good_path = Path(DATA_DIR, good_name)
+    good_suite = pyperf.BenchmarkSuite.loads(good_path.read_text("utf8"))
+    actual_suite = pyperf.BenchmarkSuite.loads(actual_path.read_text("utf8"))
+    for bm in good_suite:
+        actual_bm = actual_suite.get_benchmark(bm.get_name())
+        # fmt: off
+        bm.update_metadata({
+            "description": actual_bm.get_metadata()["description"],
+            "blackbench-version": __version__,
+            "black-version": black.__version__
+        })
+        # fmt: on
+    with StringIO() as fakefile:
+        good_suite.dump(fakefile)
+        fakefile.seek(0)
+        good = json.load(fakefile)
+    actual = json.loads(actual_path.read_text("utf8"))
+    assert good == actual
 
 
 def test_info_cmd(run_cmd):
@@ -91,8 +120,7 @@ def test_run_cmd(tmp_result: Path, run_cmd):
     for cmd in commands:
         assert len(cmd) == 4
         assert "--fast" not in cmd
-    good_result = (DATA_DIR / "all.results.json").read_text("utf8")
-    assert tmp_result.read_text("utf8") == good_result
+    compare_json_data("all.results.json", tmp_result)
 
     output_lines = result.output.splitlines()
     assert len(output_lines) == 15
@@ -175,8 +203,7 @@ def test_run_cmd_with_format_config(tmp_result: Path, run_cmd):
 
     assert not result.exit_code
     assert "ERROR" not in result.output and "WARNING" not in result.output
-    good_result = (DATA_DIR / "micro-tiny.json").read_text("utf8")
-    assert tmp_result.read_text("utf8") == good_result
+    compare_json_data("micro-tiny.json", tmp_result)
 
 
 def test_run_cmd_with_broken_format_config(tmp_result: Path, run_cmd) -> None:
@@ -243,8 +270,7 @@ def test_run_cmd_with_pyperf_args(tmp_result: Path, run_cmd):
     assert command[4:] == ["--fast", "--values", "1"]
     assert not result.exit_code
     assert "ERROR" not in result.output and "WARNING" not in result.output
-    good_result = (DATA_DIR / "micro-tiny.json").read_text("utf8")
-    assert tmp_result.read_text("utf8") == good_result
+    compare_json_data("micro-tiny.json", tmp_result)
 
 
 def test_run_cmd_with_broken_pyperf_args(tmp_result: Path, run_cmd) -> None:

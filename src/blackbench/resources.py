@@ -48,18 +48,18 @@ class FormatTask(Task):
         return self.template.format(name=name, target=str(target.path), mode=self.custom_mode)
 
 
+_flit_files = [
+    *_gen_python_files(NORMAL_DIR / "flit"),
+    *_gen_python_files(NORMAL_DIR / "flit_core"),
+]
 _targets = [
     *[
-        Target(path, micro=False, description="Black source code from 21.6b0")
-        for path in _gen_python_files(NORMAL_DIR / "black")
+        Target(path, micro=False, description=f"Black source code from 21.6b0 (#{n})")
+        for n, path in enumerate(_gen_python_files(NORMAL_DIR / "black"), start=1)
     ],
     *[
-        Target(path, micro=False, description="Flit source code from 3.2.0")
-        for path in _gen_python_files(NORMAL_DIR / "flit")
-    ],
-    *[
-        Target(path, micro=False, description="Flit source code from 3.2.0")
-        for path in _gen_python_files(NORMAL_DIR / "flit_core")
+        Target(path, micro=False, description=f"Flit source code from 3.2.0 (#{n})")
+        for n, path in enumerate(_flit_files, start=1)
     ],
     Target(MICRO_DIR / "dict-literal.py", micro=True, description="A long dictionary literal"),
     Target(
