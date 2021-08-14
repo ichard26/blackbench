@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 21.8a1
 
-Date of release: *n/a*
+Date of release: August 14th, 2021
 
 **Bugfixes & enhancements**:
 

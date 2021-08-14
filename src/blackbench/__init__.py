@@ -2,7 +2,7 @@
 A benchmarking suite for Black, the Python code formatter.
 """
 
-__version__ = "21.8+dev1"
+__version__ = "21.8a1"
 
 import os
 import subprocess
