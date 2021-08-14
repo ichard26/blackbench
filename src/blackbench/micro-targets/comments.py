@@ -1,4 +1,5 @@
 config = some.Structure(
+    # hi, i'm a comment
     globalMap = {
         103310322020340: [100000031211103,101042000320420,100100001202021,112320301100420,110101024402203,112001202000203,112101112010031,102130400200010,100401014300441,103000401422033],
         110040120003212: [114413100031332,102101001412002,100210000032130,214000110100040,103031420121210,112114222301010,110133330100020,100001001203011,102210220202130,102200120234012],  # spam
@@ -95,3 +96,79 @@ def main(drive: Path):
 #  "FQo]FsGuY  y mPt QgKDcmqiQxH`_T xIaJmky E`PjMj^hGcFAHxId pMkW KfDdFA  S "
 #  "WPJ ay p BnrjTpbHL` qBSKx wz wkYjBa`dJq ",
 #    "Wh_O  OcYNuB w pNIu^wKfcUJWTL L[UGfEX gYan  HBoG"
+
+
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+
+
+# i heard you like comments
+evens = []  #                           "wait you don't?"
+for i in range(2, 101):  # no
+    if not i % 2:               # also no
+        evens.append(evens)   # more comments
+# why not one more
+
+
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+this  =  1  # fmt: skip
+
+
+# fmt: off
+
+
+def main(yes: bool, quiet: bool) -> None:
+    try:
+        search_dir = BLACK_CACHE_DIR.expanduser().resolve()
+    except OSError as e:
+        out_err(
+            f"ERROR: unable to resolve cache directory ({str(BLACK_CACHE_DIR)}): {e}"
+        )
+        sys.exit(1)
+
+    try:
+        cache_dirs = list(search_dir.iterdir())
+    except OSError as e:
+        out_err(f"ERROR: unable to read cache directory ({str(BLACK_CACHE_DIR)}): {e}")
+        sys.exit(1)

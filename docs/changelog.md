@@ -11,6 +11,12 @@ Date of release: *n/a*
   are caught earlier.
 - The parse task now supports installations of Black as old as 19.3b0!
 - Additional metadata is now injected into the pyperf JSON files before being dumped.
+- The `comments` and `nested` micro targets were tweaked to be more microbenchmark-y.
+
+**Project**:
+
+- The release process and automation is now ready for use. Which is great since this is
+  the first release planned to be published to PyPI!
 
 ## 21.7.dev2
 
