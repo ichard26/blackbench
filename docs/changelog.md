@@ -6,7 +6,7 @@ Date of release: *n/a*
 
 **Bugfixes & enhancements**:
 
-- *so far it's looking like a desert*
+- Fixed broken (whoops!) documentation link in project metadata.
 
 ## 21.8a1
 

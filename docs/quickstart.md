@@ -2,28 +2,20 @@
 
 ## Installation
 
-```{note}
-Currently blackbench isn't available on PyPI. Although publishing to PyPI is planned
-once blackbench reaches a state where it's generally usable. For now, you have two
-main choices for installing blackbench.
-```
-
 **Prerequisite:** Python 3.8 or higher[^1]
 
-The first one is going to the releases page from this project's GitHub homepage and
-downloading the wheel for the version you'd like. Then once available locally, you can
-pass that file to pip:
+Blackbench is available through PyPI so it's pretty easy to install.
 
 ```bash
-pip install path/to/the/downloaded/wheel.whl
+python -m pip install blackbench
 ```
 
-The other one is installing via a VSC URL with pip. This will pull down the newest
+Your other option is installing via a VSC URL with pip. This will pull down the newest
 revision of blackbench (in other words, whatever is in `main`). Unreleased versions of
 blackbench should work just fine, but may have bugs and other half-implemented features.
 
 ```bash
-pip install git+git://github.com/ichard26/blackbench
+python -m pip install git+git://github.com/ichard26/blackbench
 ```
 
 `````{tip}

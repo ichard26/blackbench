@@ -30,7 +30,7 @@ requires-python = ">=3.8"
 blackbench = "blackbench:main"
 
 [tool.flit.metadata.urls]
-Documentation = "https://blackbench.readthedocs.io/en/stable"
+Documentation = "https://blackbench.readthedocs.io/en/stable/"
 Changelog = "https://blackbench.readthedocs.io/en/latest/changelog.html"
 
 [tool.black]
