@@ -233,16 +233,51 @@ focus hasn't been already covered by another target.
 
 ### Release process
 
-```{todo}
-Need to actually write up a release process, but that will wait until blackbench hits
-beta or alpha.
+Before you fear what lies in front of you please know that the release process was
+designed to be simple and lightweight. The fact you're doing one in the first place is
+awesome and your time should be treated well! So in pursuit of that, here's the
+blackbench release process:
 
-See also <https://github.com/ichard26/blackbench/issues/7>.
+```{note}
+You don't have to follow these steps carefully, they're more like guidelines that
+aim to make the 99% case easy. I'm sure there's situations this release process
+won't work and in that case, just use your best judgement.
 ```
+
+1. Once you've decided that a release is due, please verify the following things:
+
+   - the changelog has at least one entry (unless you're doing a post-release or
+     something like that)
+   - CI for the main branch is all green
+
+1. If you don't have a local development environment, either setup one up or just make
+   sure you have flit[^2] ready to go
+
+1. Checkout main and/or cleanup your local repository
+
+1. Run `flit -s do-release -- <version>` with this release's version. The Nox session
+   will handle the rest by:
+
+   - checking the local repository is reasonably clean
+   - updating both the version string and changelog to include the new version and
+     today's date
+   - commiting those changes and then tagging the commit
+   - checking out the repository in a temporary isolated directory
+   - running the `flit publish` command
+   - updating the version string and changelog again for development
+   - and finally commiting those changes
+
+1. Push the newly created commits and tag to the GitHub repository
+
+1. Go get a coffee or something, you just did a release! Congrats!
 
 [^1]: I know it's specifically for Black, but blackbench is a development tool for Black so I
     consider it acceptable - although I never asked ... but then again, I am a maintainer of
     Black so yeah :p
+
+[^2]: I'd strongly recommend also setting up pre-commit so any dumb mistakes by the release
+    automation is caught before release, but the release automation shouldn't be buggy so
+    it's your call.
 
 [discord]: https://discord.gg/RtVdv86PrH
 [nox]: https://nox.thea.codes/en/stable/
