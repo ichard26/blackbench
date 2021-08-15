@@ -8,7 +8,7 @@ author = "Richard Si"
 author-email = "63936253+ichard26@users.noreply.github.com"
 home-page = "https://github.com/ichard26/blackbench"
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: 3 :: Only",

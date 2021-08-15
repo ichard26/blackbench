@@ -6,7 +6,9 @@ Date of release: *n/a*
 
 **Bugfixes & enhancements**:
 
-- Fixed broken (whoops!) documentation link in project metadata.
+- Fixed broken (whoops!) documentation link and classifiers in project metadata.
+- Fixed a bug with the `black.FileMode` configuration pre-check which caused it to crash
+  with mypyc compiled Black.
 
 ## 21.8a1
 

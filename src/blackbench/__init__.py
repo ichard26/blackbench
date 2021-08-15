@@ -109,6 +109,7 @@ def check_pyperf_args(args: Sequence[str]) -> None:
 def check_mode_config(config: str) -> None:
     import black
 
+    assert isinstance(config, str), config
     try:
         eval(f"black.FileMode({config})", {"black": black})
     except Exception as e:
@@ -275,6 +276,7 @@ def main(ctx: click.Context) -> None:
     ),
     click.option(
         "--format-config",
+        default="",
         is_eager=True,
         help=(
             "Arguments to pass to black.Mode for format tasks. Must be valid argument"
