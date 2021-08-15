@@ -300,8 +300,8 @@ def do_release(session: nox.Session) -> None:
     if modified_files_in_git() or modified_files_in_git("--staged"):
         session.error("Repository not clean, please remove, unstage, or commit your changes")
 
-    if len(session.posargs) != 1:
-        session.error("Usage: nox -s publish -- <version>")
+    if not len(session.posargs):
+        session.error("Usage: nox -s publish -- <version> [publish-args]")
     else:
         version = session.posargs[0]
 
@@ -313,7 +313,7 @@ def do_release(session: nox.Session) -> None:
     with isolated_temporary_checkout(session) as workdir:
         session.chdir(workdir)
         session.install("flit")
-        session.run("flit", "publish")
+        session.run("flit", "publish", *session.posargs[1:])
 
     session.chdir(THIS_DIR)
     update_version(session, next_development_version(version), MAIN_MODULE)
