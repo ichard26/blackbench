@@ -35,7 +35,7 @@ Changelog = "https://blackbench.readthedocs.io/en/latest/changelog.html"
 
 [tool.black]
 line-length = 100
-experimental-string-processing = true
+preview = true
 target-version = ["py38", "py39"]
 extend-exclude = '''
 /(
